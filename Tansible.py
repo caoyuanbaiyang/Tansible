@@ -75,13 +75,15 @@ class Tansible(object):
         return rt_hostnames
 
     def __check_acton_hostcfg(self):
+        hostnames = []
+        err_hostnames = []
         for action in self.action_cfg["ACTION"]:
-            hostnames = self.__get_host_name(action["hosts"])
-            err_hostnames = self.__check_hostname(hostnames)
-            if len(err_hostnames) != 0:
-                return False, err_hostnames
-            else:
-                return True, []
+            hostnames = hostnames + self.__get_host_name(action["hosts"])
+            err_hostnames = err_hostnames + self.__check_hostname(hostnames)
+        if len(err_hostnames) != 0:
+            return False, err_hostnames
+        else:
+            return True, []
 
     def __action_func_inner(self, hostname, modelname, param):
         self.mylog.info("------模块:{mod},主机:{host}" .format(host=hostname, mod=modelname))
