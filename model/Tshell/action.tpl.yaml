@@ -1,0 +1,10 @@
+PUBLIC:
+  base64: &base64 'newpassowrd-64'
+  potpwd: &potpwd 'newpassowrd-pot'
+  pwd: &pwd 'newpassowrd'
+ACTION:
+  - hosts: ALL
+    tasks:
+      - name: 检查hosts.yaml中主机名是否正确
+        Tshell:
+          cmd: 'hostname'

@@ -1,0 +1,11 @@
+PUBLIC:
+  公共参数key: 公共参数value
+ACTION:
+  - hosts: ALL # ALL, 主机名或 [主机1，主机2]
+    tasks:
+      - name: 上传inspect目录  # 自定义
+        Tupload:
+          simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
+          source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #以linux格式
+          dest_dir: /root/upload/
+          exclude: [start.sh]
