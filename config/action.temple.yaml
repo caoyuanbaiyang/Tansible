@@ -1,0 +1,11 @@
+PUBLIC:
+  公共参数key: 公共参数value
+ACTION:
+  - hosts: [host1, group2]
+    tasks:
+      - name: 下载文件
+        Tsftp:
+          '{HOME}':
+             remote_dir: /home/application*
+             exclude: [logs, log, csdklog, cache]
+          action: download

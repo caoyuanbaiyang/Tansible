@@ -1,0 +1,21 @@
+PUBLIC:
+    #公共参数
+    key_filename: config/id_rsa_app_sim
+    passphrase: 123
+    connet_type: 2  # 1 password  2 rsa
+    username: root
+    password: redhat
+HOST:
+  #  http行情，模拟交易
+  host1:
+    ip: 127.0.1.131
+  host2:
+    ip: 127.0.1.132
+  host3:
+    ip: 192.168.128.140
+    connet_type: 1
+    username: root
+    password: redhat123
+  host4:
+    ip: 192.168.128.141
+    connet_type: 1
