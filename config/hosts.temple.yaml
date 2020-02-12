@@ -4,7 +4,7 @@ PUBLIC:
     passphrase: 123
     connet_type: 2  # 1 password  2 rsa
     username: root
-    password: redhat1
+    password: redhat
 HOST:
   #  http行情，模拟交易
   host1:
