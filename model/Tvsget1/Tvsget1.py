@@ -49,7 +49,7 @@ class ModelClass(object):
                 self.sftp_get_dir_exclude(sftp, ssh, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
                                           md5filter=md5filter)
             else:
-                filesize = sftp.stat(remote_dir)
+                filesize = sftp.stat(remote_dir).st_size
                 self.sftp_get_file_exclude(sftp, ssh, local_dir, remote_dir, excludes, md5filter, filesize)
         else:
             (tmp_remote_dir, filename) = os.path.split(remote_dir)
@@ -159,7 +159,7 @@ class ModelClass(object):
     def action(self, ssh, hostname, param):
 
         if not ("local_dir" in param) or param["local_dir"] is None:
-            param["local_dir"] = r"download\Tvsget1"
+            param["local_dir"] = os.path.join("download", os.path.splitext(os.path.basename(__file__))[0])
 
         sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
         for cfg_key, cfg_value in param.items():
