@@ -45,17 +45,23 @@ class ModelClass(object):
 
     def donwload_from_linux(self, sftp, ssh, local_dir, remote_dir, excludes=[], md5filter=0):
         if not isContrainSpecialCharacter(remote_dir):
-            self.sftp_get_dir_exclude(sftp, ssh, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
-                                      md5filter=md5filter)
+            if remote_dir.endswith("/"):
+                self.sftp_get_dir_exclude(sftp, ssh, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
+                                          md5filter=md5filter)
+            else:
+                filesize = sftp.stat(remote_dir)
+                self.sftp_get_file_exclude(sftp, ssh, local_dir, remote_dir, excludes, md5filter, filesize)
         else:
             (tmp_remote_dir, filename) = os.path.split(remote_dir)
             for file in sftp.listdir_attr(tmp_remote_dir):
                 if match(file.filename, filename):
                     tmp_remote_dir1 = Path(os.path.join(tmp_remote_dir, file.filename)).as_posix()
                     if stat.S_ISDIR(file.st_mode):
-                        tmp_remote_dir1 = tmp_remote_dir1 + "/"
-                    self.sftp_get_dir_exclude(sftp, ssh, local_dir=local_dir, remote_dir=tmp_remote_dir1, excludes=excludes
-                                              , md5filter=md5filter)
+                        self.sftp_get_dir_exclude(sftp, ssh, local_dir=local_dir, remote_dir=tmp_remote_dir1,
+                                                  excludes=excludes, md5filter=md5filter)
+                    else:
+                        self.sftp_get_file_exclude(sftp, ssh, local_dir=local_dir, remote_file=tmp_remote_dir1,
+                                                   excludes=excludes, md5filter=md5filter, filesize=file.st_size)
 
     def execcommand(self, ssh, command, stdinfo=[], timeout=5):
         try:
@@ -89,47 +95,45 @@ class ModelClass(object):
             return [False, "".join(err)]
         return [True, out]
 
+    def sftp_get_file_exclude(self, sftp, ssh, local_dir, remote_file, excludes=[], md5filter=0, filesize=0):
+        (tmp_dir, filename) = os.path.split(remote_file)
+        tmp_local_filename = os.path.join(local_dir, filename)
+        if not (filename in excludes or remote_file in excludes):
+            if filesize > md5filter:
+                md5cmd = "md5sum " + remote_file
+                content = self.execcommand(ssh, md5cmd)
+                generatebigersizefile(tmp_local_filename, content[1].split()[0])
+                self.mylog.info('  Get文件  {} size: {} 传输完成...'.format(remote_file, filesize))
+            else:
+                try:
+                    sftp.get(remote_file, tmp_local_filename)
+                except:
+                    self.mylog.info("Get文件 {file},{loc} 失败!".format(file=remote_file,
+                                                                    loc=tmp_local_filename))
+                self.mylog.info('  Get文件  %s 传输完成...' % remote_file)
+                self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
+
     def sftp_get_dir_exclude(self, sftp, ssh, local_dir, remote_dir, excludes=[], md5filter=0):
-        # remote_dir如果是文件
-        if not remote_dir.endswith("/"):
-            (tmp_dir, filename) = os.path.split(remote_dir)
-            if not (filename in excludes or remote_dir in excludes):
-                sftp.get(remote_dir, os.path.join(local_dir, filename))
-                self.mylog.info('  Get文件  %s 传输完成...' % remote_dir)
-
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
-        if remote_dir.endswith("/"):
-            for file in sftp.listdir_attr(remote_dir):
-                remote_path_filename = Path(os.path.join(remote_dir, file.filename)).as_posix()
+        for file in sftp.listdir_attr(remote_dir):
+            remote_path_filename = Path(os.path.join(remote_dir, file.filename)).as_posix()
 
-                # 如果判断为无需下载的文件，则跳过本次循环，处理下一个文件名词
-                if exclude_files(file.filename, remote_path_filename, excludes):
-                    continue
+            # 如果判断为无需下载的文件，则跳过本次循环，处理下一个文件名词
+            if exclude_files(file.filename, remote_path_filename, excludes):
+                continue
 
-                # 如果是目录，则递归处理该目录，远端通过stat.S_ISDIR(st_mode)
-                if stat.S_ISDIR(file.st_mode):
-                    tmp_local_dir = os.path.join(local_dir, file.filename)
-                    if not os.path.exists(tmp_local_dir):
-                        os.makedirs(tmp_local_dir)
-                    self.sftp_get_dir_exclude(sftp, ssh, local_dir=tmp_local_dir, remote_dir=remote_path_filename + "/",
-                                              excludes=excludes, md5filter=md5filter)
-                    self.mylog.info('Get文件夹%s 传输中...' % remote_path_filename)
-                    self.mylog.info('   位置  {loc_dir}:' .format(loc_dir=tmp_local_dir))
-                else:
-                    tmp_local_filename = os.path.join(local_dir, file.filename)
-                    if file.st_size > md5filter:
-                        md5cmd = "md5sum " + remote_path_filename
-                        content = self.execcommand(ssh, md5cmd)
-                        generatebigersizefile(tmp_local_filename, content[1].split()[0])
-                        self.mylog.info('  Get文件  {} size: {} 传输完成...' .format(remote_path_filename, file.st_size))
-                    else:
-                        try:
-                            sftp.get(remote_path_filename, tmp_local_filename)
-                        except:
-                            self.mylog.info("Get文件 {file},{loc} 失败!".format(file=remote_path_filename,
-                                                                            loc=tmp_local_filename))
-                        self.mylog.info('  Get文件  %s 传输完成...' % remote_path_filename)
-                        self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
+            # 如果是目录，则递归处理该目录，远端通过stat.S_ISDIR(st_mode)
+            if stat.S_ISDIR(file.st_mode):
+                tmp_local_dir = os.path.join(local_dir, file.filename)
+                if not os.path.exists(tmp_local_dir):
+                    os.makedirs(tmp_local_dir)
+                self.sftp_get_dir_exclude(sftp, ssh, local_dir=tmp_local_dir, remote_dir=remote_path_filename ,
+                                          excludes=excludes, md5filter=md5filter)
+                self.mylog.info('Get文件夹%s 传输中...' % remote_path_filename)
+                self.mylog.info('   位置  {loc_dir}:' .format(loc_dir=tmp_local_dir))
+            else:
+                self.sftp_get_file_exclude(sftp, ssh, local_dir, remote_path_filename, excludes, md5filter
+                                           , file.st_size)
 
     def __acton_inner(self, sftp, ssh, local_home, cfg_key, cfg_value):
         remote_dir = cfg_value["remote_dir"]
