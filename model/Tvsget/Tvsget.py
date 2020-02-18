@@ -130,7 +130,7 @@ class ModelClass(object):
     def action(self, ssh, hostname, param):
 
         if not ("local_dir" in param) or param["local_dir"] is None:
-            param["local_dir"] = r"download\Tvsget"
+            param["local_dir"] = os.path.join("download", os.path.splitext(os.path.basename(__file__))[0])
 
         sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
         for cfg_key, cfg_value in param.items():

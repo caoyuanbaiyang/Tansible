@@ -132,7 +132,7 @@ class ModelClass(object):
             raise Exception('配置文件配置错误:未知action参数:{action}'.format(action=json.dumps(param["action"])))
 
         if not ("local_dir" in param) or param["local_dir"] is None:
-            param["local_dir"] = r"download\Tsftp"
+            param["local_dir"] = os.path.join("download", os.path.splitext(os.path.basename(__file__))[0])
 
         sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
         for cfg_key, cfg_value in param.items():
