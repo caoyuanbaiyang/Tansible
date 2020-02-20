@@ -7,4 +7,5 @@ ACTION:
     tasks:
       - name: 检查hosts.yaml中主机名是否正确
         Tshell:
+          # 该模块提供运程执行命令的功能
           cmd: 'hostname'

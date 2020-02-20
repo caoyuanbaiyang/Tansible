@@ -11,8 +11,11 @@ ACTION:
         # 下载到download\dbpwdmodify 目录下
         # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
           mntrad:
+            # cfg_file 具体配置服务器上密码配置文件的路径和文件名
             cfg_file: /home/sgeapp/tomcat-mntrade/webapps/ROOT/WEB-INF/conf/application-jdbc.properties
+            # instr 用于查找行，并对instr字符后面的内容用新的密码进行替换
             instr: 'spring.datasource.password='
+            # pwd 设置新密码
             pwd: *BlowFish
           quote:
             cfg_file: /home/sgeapp/tomcat-quote/webapps/quote/WEB-INF/conf/application-jdbc.properties

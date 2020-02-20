@@ -1,7 +1,5 @@
 PUBLIC:
-  base64: &base64 'newpassowrd-64'
-  potpwd: &potpwd 'newpassowrd-pot'
-  pwd: &pwd 'newpassowrd'
+  公共参数key: 公共参数value
 ACTION:
   - hosts: ALL
     tasks:

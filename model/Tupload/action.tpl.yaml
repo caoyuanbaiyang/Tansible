@@ -5,7 +5,8 @@ ACTION:
     tasks:
       - name: 上传inspect目录  # 自定义
         Tupload:
+          # 该模块提供上传文件的功能
           simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
-          source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #以linux格式
-          dest_dir: /root/upload/
-          exclude: [start.sh]
+          source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
+          dest_dir: /root/upload/  #上次的路径
+          exclude: [start.sh]      #不上传的文件及文件夹列表
