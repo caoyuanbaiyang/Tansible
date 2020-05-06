@@ -127,7 +127,9 @@ class ModelClass(object):
                 self.mylog.info(r'     位置  {file} 传输中...' .format(file=remote_filename))
                 sftp.put(loc_path_filename, remote_filename)
 
-    def action(self, ssh, hostname, param):
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         if param["action"] not in ["download", "upload"]:
             raise Exception('配置文件配置错误:未知action参数:{action}'.format(action=json.dumps(param["action"])))
 

@@ -16,7 +16,9 @@ class ModelClass(object):
         else:
             return False, cmdhostname
 
-    def execcommand(self, ssh, command, stdinfo=[], timeout=5):
+    def execcommand(self, ssh, command, stdinfo=None, timeout=5):
+        if stdinfo is None:
+            stdinfo = []
         try:
             stdin, stdout, stderr = ssh.exec_command("echo $LANG")
             langset = stdout.readlines()[0].replace("\n", "").split(".")[1]
@@ -48,7 +50,9 @@ class ModelClass(object):
             return [False, "".join(err)]
         return [True, out]
 
-    def action(self, ssh, hostname, param):
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         stdinfo = []
         rz, cmdhostname = self.checkhostname(ssh, hostname, stdinfo)
         if rz:

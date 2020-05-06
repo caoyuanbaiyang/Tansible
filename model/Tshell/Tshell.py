@@ -41,7 +41,9 @@ class ModelClass(object):
             return [False, "".join(err)]
         return [True, out]
 
-    def action(self, ssh, hostname, param):
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["cmd"]:
                 raise Exception('配置文件配置错误:未知参数:{param}'.format(param=json.dumps(param)))

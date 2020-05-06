@@ -56,7 +56,9 @@ class ModelClass(object):
                     raise Exception("文件上传失败{host}:{file}".format(host=hostname, file=remote_file))
                 self.mylog.info('Put文件 %s:%s 传输完成...' % (hostname, remote_file))
 
-    def action(self, ssh, hostname, param):
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         for task in param["action"]:
             if task in ["DOWNLOAD", "UPLOAD", "ROLLBACK"]:
                 sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
