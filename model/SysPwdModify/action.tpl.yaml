@@ -1,0 +1,15 @@
+PUBLIC:
+  # 公共设置部分
+  BASE64: &BASE64 'BASE64'
+ACTION:
+  - hosts: [Simutransaction1, Simutransaction2]
+    tasks:
+      - name: 用户密码修改
+        SysPwdModify:
+        # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
+          current_pwd: 当前密码
+          new_pwd: 新密码
+          current_pwd_file:  current_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存当前密码
+          new_pwd_file:  new_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存新密码
+          # action 方式：checkpwd 检查当前密码 , modify 改密码
+          action: checkpwd
