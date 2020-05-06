@@ -8,6 +8,7 @@ import importlib
 from lib.tools import Tools
 import paramiko
 import os
+import re
 
 
 now_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -34,6 +35,7 @@ class Tansible(object):
         # hostsnames 可以是列表，可以是ALL，可以是具体主机名
         # 还可以是组名
         rt_hostnames = []
+        err_rt_hostnames = []
         if isinstance(hostsnames, list):
             # hosts.yaml 中部分主机 或 groups.yaml中指定的组
             for host in hostsnames:
@@ -45,13 +47,22 @@ class Tansible(object):
                             self.mylog.cri("嵌套组配置错误，必须有children关键字")
                             raise Exception("嵌套组配置错误，必须有children关键字")
                         for children_group in self.groups[host]["children"]:
-                            rt_hostnames = rt_hostnames + self.groups[children_group]
+                            # 具体组名下面的hostname 支持正则表达式
+                            for pattern in self.groups[children_group]:
+                                ok_hostnames, err_hostnames = self.__get_host_name_from_pattern(pattern)
+                                rt_hostnames = rt_hostnames + ok_hostnames
+                                err_rt_hostnames = err_rt_hostnames + err_hostnames
                     else:
-                        # 非嵌套组
-                        rt_hostnames = rt_hostnames + self.groups[host]
+                        # 非嵌套组， 具体组名下面的hostname 支持正则表达式
+                        for pattern in self.groups[host]:
+                            ok_hostnames, err_hostnames = self.__get_host_name_from_pattern(pattern)
+                            rt_hostnames = rt_hostnames + ok_hostnames
+                            err_rt_hostnames = err_rt_hostnames + err_hostnames
                 else:
-                    # host 是具体的主机
-                    rt_hostnames.append(host)
+                    # host 是具体的主机， 支持正则表达式
+                    ok_hostnames, err_hostnames = self.__get_host_name_from_pattern(host)
+                    rt_hostnames = rt_hostnames + ok_hostnames
+                    err_rt_hostnames = err_rt_hostnames + err_hostnames
 
         elif isinstance(hostsnames, str):
             if hostsnames == "ALL":
@@ -59,11 +70,23 @@ class Tansible(object):
                 for hostname in self.hosts["HOST"]:
                     rt_hostnames.append(hostname)
             else:
-                # hosts.yaml 中某一台主机，后续弃用，先保持兼容
-                rt_hostnames.append(hostsnames)
+                raise Exception("action文件hosts配置有误，字符串类hosts只支持ALL,其他需要用[] 表示")
         else:
-            raise Exception("action文件hosts配置有误")
-        return rt_hostnames
+            raise Exception("action文件hosts配置有误，类型只能为ALL或[]")
+        return rt_hostnames, err_rt_hostnames
+
+    def __get_host_name_from_pattern(self, pattern):
+        # pattern 可以是正则表达式形式的
+        # group.yaml 中组及action.yaml hosts 支持正则表达式，因此补仓改函数
+        rt_hostnames = []
+        err_hostnames = []
+        for hostname in self.hosts["HOST"]:
+            if re.match(pattern, hostname):
+                rt_hostnames.append(hostname)
+
+        if len(rt_hostnames) == 0:
+            err_hostnames.append(pattern)
+        return rt_hostnames, err_hostnames
 
     def __check_hostname(self, hostsnames):
         # hostnames 为主机名列表，该函数检查主机名是否在hosts.yaml中
@@ -78,8 +101,9 @@ class Tansible(object):
         hostnames = []
         err_hostnames = []
         for action in self.action_cfg["ACTION"]:
-            hostnames = hostnames + self.__get_host_name(action["hosts"])
-            err_hostnames = err_hostnames + self.__check_hostname(hostnames)
+            ok_hostnames, err_hostnames = self.__get_host_name(action["hosts"])
+            hostnames = hostnames + ok_hostnames
+            err_hostnames = err_hostnames + err_hostnames
         if len(err_hostnames) != 0:
             return False, err_hostnames
         else:
@@ -117,7 +141,7 @@ class Tansible(object):
 
         for action in self.action_cfg["ACTION"]:
             # 遍历hosts列表
-            hostname_list = self.__get_host_name(action["hosts"])
+            hostname_list, err_host_list = self.__get_host_name(action["hosts"])
             for task in action["tasks"]:
                 # 遍历task列表
                 self.mylog.info('#########执行任务：{task}#########'.format(task=task["name"]))

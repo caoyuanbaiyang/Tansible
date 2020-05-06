@@ -75,7 +75,7 @@ class ModelClass(object):
         rs = self.shellCommand(ssh, "su - {}".format(username), [password])
 
         if type(rs[1]) == str:
-            if "failure" in rs[1] or "失败" in rs[1]:
+            if "failure" in rs[1] or "故障" in rs[1] or "失败" in rs[1]:
                 self.mylog.info("检查：主机{}登录检查失败".format(hostname))
             else:
                 self.mylog.info("检查：主机{}登录检查成功".format(hostname))
