@@ -30,7 +30,7 @@ class ModelClass(object):
                 self.mylog.info("输入:{}".format(info))
             stdin.flush()
 
-            timeout = 3
+            timeout = 2.2
             endtime = time.time() + timeout
 
             if stderr.readable():
@@ -41,6 +41,9 @@ class ModelClass(object):
                         break
                 err = stderr.read()
                 err = err.decode(langset)
+
+            endtime = time.time() + timeout
+
             if stdout.readable():
                 while not stdout.channel.eof_received:
                     time.sleep(1)
