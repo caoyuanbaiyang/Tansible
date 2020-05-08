@@ -35,7 +35,7 @@ class ModelClass(object):
 
             if stderr.readable():
                 while not stderr.channel.eof_received:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     if time.time() > endtime:
                         stderr.channel.close()
                         break
@@ -46,7 +46,7 @@ class ModelClass(object):
 
             if stdout.readable():
                 while not stdout.channel.eof_received:
-                    time.sleep(1)
+                    time.sleep(0.5)
                     if time.time() > endtime:
                         stdout.channel.close()
                         break
@@ -55,11 +55,11 @@ class ModelClass(object):
             self.mylog.info("命令out:" + "".join(out))
             self.mylog.info("命令err:" + "".join(err))
         except paramiko.ssh_exception.SSHException:
-            self.mylog.info("命令执行失败:" + command)
+            self.mylog.error("命令执行失败:" + command)
             return [False, "命令执行失败:" + command]
         except Exception as e:
             self.mylog.info(e)
-            self.mylog.info("命令执行失败:" + command)
+            self.mylog.error("命令执行失败:" + command)
             return [False, e]
 
         return [True, out]
@@ -72,16 +72,16 @@ class ModelClass(object):
             if "successfully" in rs[1] or "成功" in rs[1]:
                 self.mylog.info("修改密码：主机{}修改成功".format(hostname))
             else:
-                self.mylog.info("修改密码：主机{}修改失败".format(hostname))
+                self.mylog.error("修改密码：主机{}修改失败".format(hostname))
 
     def checkwd(self, hostname, ssh, username, password):
         rs = self.shellCommand(ssh, "su - {}".format(username), [password])
 
         if type(rs[1]) == str:
-            if "failure" in rs[1] or "故障" in rs[1] or "失败" in rs[1]:
-                self.mylog.info("检查：主机{}登录检查失败".format(hostname))
-            else:
+            if "Last login" in rs[1] or "上一次登录" in rs[1]:
                 self.mylog.info("检查：主机{}登录检查成功".format(hostname))
+            else:
+                self.mylog.error("检查：主机{}登录检查失败".format(hostname))
 
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
