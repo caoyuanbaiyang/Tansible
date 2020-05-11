@@ -59,7 +59,9 @@ class ModelClass(object):
                 self.mylog.info(r'     位置  {file} 传输中...' .format(file=remote_filename))
                 sftp.put(loc_path_filename, remote_filename)
 
-    def action(self, ssh, hostname, param):
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["simple_type", "source_dir", "dest_dir", "exclude"]:

@@ -127,8 +127,9 @@ class ModelClass(object):
         self.donwload_from_linux(sftp, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
                                  md5filter=md5filter)
 
-    def action(self, ssh, hostname, param):
-
+    def action(self, ssh, hostname, param, hostparam=None):
+        if hostparam is None:
+            hostparam = []
         if not ("local_dir" in param) or param["local_dir"] is None:
             param["local_dir"] = os.path.join("download", os.path.splitext(os.path.basename(__file__))[0])
 
