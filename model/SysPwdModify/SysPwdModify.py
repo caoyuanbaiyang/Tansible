@@ -88,11 +88,13 @@ class ModelClass(object):
             hostparam = []
         current_pwd = ""
         new_pwd = ""
-        if "current_pwd" in param and "new_pwd" in param:
+        if "current_pwd" in param:
             current_pwd = param["current_pwd"]
-            new_pwd = param["new_pwd"]
-        if "current_pwd_file" in param and "new_pwd_file" in param:
+        if "current_pwd_file" in param:
             current_pwd = ReadCfg().readcfg(os.path.join("config", param["current_pwd_file"]))[hostname]
+        if "new_pwd" in param:
+            new_pwd = param["new_pwd"]
+        if "new_pwd_file" in param:
             new_pwd = ReadCfg().readcfg(os.path.join("config", param["new_pwd_file"]))[hostname]
 
         if param["action"] == "modify":
