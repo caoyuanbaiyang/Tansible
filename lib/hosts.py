@@ -83,6 +83,7 @@ class hosts(object):
             return rt_hostnames, err_hostnames
         # 含正则表达式字符的情况
         for hostname in self.hosts["HOST"]:
+            pattern = r"^" + pattern + r"$"
             if re.match(pattern, hostname):
                 rt_hostnames.append(hostname)
 
