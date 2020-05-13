@@ -7,6 +7,15 @@
 import re
 
 
+def isContrainSpecialCharacter(string):
+    #
+    special_character = r'^$.[]?+|:*\\!'
+    for i in special_character:
+        if i in string:
+            return True
+    return False
+
+
 class hosts(object):
     def __init__(self, mylog, groups, cfghosts):
         self.mylog = mylog
@@ -65,6 +74,14 @@ class hosts(object):
         # group.yaml 中组及action.yaml hosts 支持正则表达式，因此补仓改函数
         rt_hostnames = []
         err_hostnames = []
+        # 不含正则表达式字符情况
+        if not isContrainSpecialCharacter(pattern):
+            if pattern in self.hosts["HOST"]:
+                rt_hostnames.append(pattern)
+            else:
+                err_hostnames.append(pattern)
+            return rt_hostnames, err_hostnames
+        # 含正则表达式字符的情况
         for hostname in self.hosts["HOST"]:
             if re.match(pattern, hostname):
                 rt_hostnames.append(hostname)
@@ -81,4 +98,3 @@ class hosts(object):
                 # 检查失败，不在hosts.yaml中
                 rt_hostnames.append(hostname)
         return rt_hostnames
-
