@@ -6,14 +6,16 @@
 # @Software: win10 python3
 import re
 
-
-def isContrainSpecialCharacter(string):
-    #
-    special_character = r'^$.[]?+|:*\\!'
-    for i in special_character:
-        if i in string:
-            return True
-    return False
+PATTERN_WITH_SUBSCRIPT = re.compile(
+    r'''^
+        (.+)                    # A pattern expression ending with...
+        \[                    # A [subscript] expression comprising:            
+            ([0-9]+)([:])      # Or an x:y or x: range.
+            ([0-9]+)
+        \]
+        $
+    ''', re.X
+)
 
 
 class hosts(object):
@@ -74,18 +76,22 @@ class hosts(object):
         # group.yaml 中组及action.yaml hosts 支持正则表达式，因此补仓改函数
         rt_hostnames = []
         err_hostnames = []
-        # 不含正则表达式字符情况
-        if not isContrainSpecialCharacter(pattern):
+        m = PATTERN_WITH_SUBSCRIPT.match(pattern)
+
+        # 不含[x:y]字符情况
+        if not m:
             if pattern in self.hosts["HOST"]:
                 rt_hostnames.append(pattern)
             else:
                 err_hostnames.append(pattern)
-            return rt_hostnames, err_hostnames
-        # 含正则表达式字符的情况
-        for hostname in self.hosts["HOST"]:
-            # pattern = r"^" + pattern + r"$"
-            if re.match(pattern, hostname):
-                rt_hostnames.append(hostname)
+        else:
+            # 包含[x:y]字符情况
+            (lable, start, sep, end) = m.groups()
+            t_hosts = []
+            for i in range(int(start), int(end) + 1):
+                hostname = f"{lable}{str(i)}"
+                if hostname in self.hosts["HOST"]:
+                    rt_hostnames.append(hostname)
 
         if len(rt_hostnames) == 0:
             err_hostnames.append(pattern)
