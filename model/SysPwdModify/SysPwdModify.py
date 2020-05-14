@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import os
 
+import chardet
+
 from lib.tools import Tools
 import paramiko
 import time
@@ -8,61 +10,47 @@ import json
 from lib.readcfg import ReadCfg
 
 
+def ssh_reply(chanel_recv):
+    buff = ""
+    whcode = chardet.detect(chanel_recv)['encoding']
+    if whcode == "ISO-8859-2":
+        reply = chanel_recv.decode('gbk', 'ignore')
+    elif whcode == "utf-8":
+        reply = chanel_recv.decode('utf8', 'ignore')
+    else:
+        reply = chanel_recv.decode('ascii', 'ignore')
+    buff += reply
+    return buff
+
+
 class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
     def shellCommand(self, ssh, command, stdinfo, timeout=5):
-        try:
-            stdin, stdout, stderr = ssh.exec_command("echo $LANG")
-            langset = stdout.readlines()[0].replace("\n", "").split(".")[1]
-        except paramiko.ssh_exception.SSHException:
-            self.mylog.info("LANG获取失败")
-            raise Exception("LANG获取失败")
-        try:
-            stdin, stdout, stderr = ssh.exec_command(command, timeout=timeout, get_pty=True)
-            self.mylog.info("执行命令:{}".format(command))
-            time.sleep(0.5)
+        chanel = ssh.invoke_shell()
+        time.sleep(0.1)
+        chanel.send(command + "\n")
 
-            for info in stdinfo:
-                stdin.write("{}\n".format(info))
-                time.sleep(0.5)
-                self.mylog.info("输入:{}".format(info))
-            stdin.flush()
+        buff = ""
+        while not (buff.endswith("assword: ") or buff.endswith("密码：")):
+            resp = chanel.recv(9999)
+            reply = ssh_reply(resp)
+            buff += reply
 
-            timeout = 2.2
-            endtime = time.time() + timeout
+        for info in stdinfo:
+            chanel.send(info)
+            chanel.send("\n")
+            time.sleep(0.1)
 
-            if stderr.readable():
-                while not stderr.channel.eof_received:
-                    time.sleep(0.5)
-                    if time.time() > endtime:
-                        stderr.channel.close()
-                        break
-                err = stderr.read()
-                err = err.decode(langset)
+        buff = ""
+        while not buff.endswith("$ "):
+            resp = chanel.recv(9999)
+            reply = ssh_reply(resp)
+            buff += reply
 
-            endtime = time.time() + timeout
-
-            if stdout.readable():
-                while not stdout.channel.eof_received:
-                    time.sleep(0.5)
-                    if time.time() > endtime:
-                        stdout.channel.close()
-                        break
-                out = stdout.read()
-                out = out.decode(langset)
-            self.mylog.info("命令out:" + "".join(out))
-            self.mylog.info("命令err:" + "".join(err))
-        except paramiko.ssh_exception.SSHException:
-            self.mylog.error("命令执行失败:" + command)
-            return [False, "命令执行失败:" + command]
-        except Exception as e:
-            self.mylog.info(e)
-            self.mylog.error("命令执行失败:" + command)
-            return [False, e]
-
-        return [True, out]
+        self.mylog.info(buff)
+        return [True, buff]
 
     def modifyNewPassword(self, hostname, ssh, password, newpassword):
         stdinfo = [password, newpassword, newpassword]
