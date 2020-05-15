@@ -11,16 +11,9 @@ from lib.readcfg import ReadCfg
 
 
 def ssh_reply(chanel_recv):
-    buff = ""
     whcode = chardet.detect(chanel_recv)['encoding']
-    if whcode == "ISO-8859-2":
-        reply = chanel_recv.decode('gbk', 'ignore')
-    elif whcode == "utf-8":
-        reply = chanel_recv.decode('utf8', 'ignore')
-    else:
-        reply = chanel_recv.decode('ascii', 'ignore')
-    buff += reply
-    return buff
+    reply = chanel_recv.decode(whcode, 'ignore')
+    return reply
 
 
 class ModelClass(object):
@@ -28,15 +21,24 @@ class ModelClass(object):
         self.mylog = mylog
 
     def shellCommand(self, ssh, command, stdinfo, timeout=5):
+
         chanel = ssh.invoke_shell()
-        time.sleep(0.1)
+        chanel.send("export LANG=en_US.UTF-8 \n")
+        time.sleep(0.01)
         chanel.send(command + "\n")
+        time.sleep(0.05)
 
         buff = ""
+        i = 0
+
         while not (buff.endswith("assword: ") or buff.endswith("密码：")):
+            time.sleep(0.01)
             resp = chanel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
+            i = i + 1
+            while i > 50:
+                break
 
         for info in stdinfo:
             chanel.send(info)
@@ -44,10 +46,14 @@ class ModelClass(object):
             time.sleep(0.1)
 
         buff = ""
+        i = 0
         while not buff.endswith("$ "):
             resp = chanel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
+            i = i + 1
+            while i > 50:
+                break
 
         self.mylog.info(buff)
         return [True, buff]
@@ -63,7 +69,7 @@ class ModelClass(object):
                 self.mylog.error("修改密码：主机{}修改失败".format(hostname))
 
     def checkwd(self, hostname, ssh, username, password):
-        rs = self.shellCommand(ssh, "su - {}".format(username), [password])
+        rs = self.shellCommand(ssh, f"su - {username}", [password])
 
         if type(rs[1]) == str:
             if "Last login" in rs[1] or "上一次登录" in rs[1]:
