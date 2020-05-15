@@ -62,7 +62,7 @@ class Tansible(object):
             connect = Tools().connectWithRSA(ssh, host["ip"], host["username"], pkey)
         if connect:
             if modelname == "CheckConnect":
-                self.mylog.cri("连接成功")
+                self.mylog.info("连接成功")
             else:
                 m = importlib.import_module("model." + modelname + "." + modelname)
                 m.ModelClass(self.mylog).action(ssh, hostname, param, host)
