@@ -20,7 +20,7 @@ paramiko
 4.  建议创建指定bat文件，关联action文件，以方便执行相关任务
 
 #### action文件配置说明
-···
+```
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
@@ -32,7 +32,7 @@ ACTION:
         SysPwdModify:  # 调用的模块，下面的设置都是模块相关的设置       
           模块参数1: 模块参数1value
           模块参数2: 模块参数2value
-···
+```
 
 ##### 模块说明
 ###### GetHostList, 获取主机列表
