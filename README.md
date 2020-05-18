@@ -37,15 +37,19 @@ ACTION:
 ##### 模块说明
 ###### GetHostList, 获取主机列表
 *模块参数*
-无模块参数
+
+无
 ###### CheckConnect, 检查SSH连接
 *模块参数*
-无模块参数
+
+无
 ###### CheckHostname, 检查hosts.yaml与实际主机名
 *模块参数*
-无模块参数
+
+无
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
+
         # 该模块提供单个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
         # 下载到download\dbpwdmodify 目录下
         # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
@@ -57,6 +61,7 @@ ACTION:
 
 ###### DbPwdModifys，数据库密码配置文件调整，多个文件
 *模块参数*
+
         # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
         # 下载到download\dbpwdmodify 目录下
         # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
@@ -74,6 +79,8 @@ ACTION:
           action:
             - DOWNLOAD
 ###### SysPwdModify，系统用户密码调整
+*模块参数*
+
         # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
           current_pwd: 当前密码   # 所有主机的当前密码一样
           new_pwd: 新密码        # 所有主机的新密码一样
@@ -85,6 +92,8 @@ ACTION:
           #   modify 改密码
           action: checkpwd
 ###### Tsftp，上传下载模块
+*模块参数*
+
         # 该模块提供下载，上传功能        
         # action 提供download,upload选项，分别为下载，上传
           local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
@@ -94,15 +103,21 @@ ACTION:
             exclude: [logs, log, csdklog, '*log', nohup.out]
           action: download 
 ###### Tshell，远程执行命令模块
+*模块参数*
+
           # 该模块提供运程执行命令的功能
           cmd: 'hostname'
 ###### Tupload，上传模块
+*模块参数*
+
           # 该模块提供上传文件的功能
           simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
           source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
           dest_dir: /root/upload/  #上传目的路径
           exclude: [start.sh]      #不上传的文件及文件夹列表
 ###### Tvsget，版本下载模块，大文件获取size，mtime，st_mode
+*模块参数*
+
         # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
         local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
           mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
@@ -111,6 +126,8 @@ ACTION:
             md5filter: 30000  # 文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
             bigcontent:  size # 可选配置项目，可设置"size", "mtime", "st_mode",不配置则默认全部获取
 ###### Tvsget1，版本下载模块，大文件获取MD5码
+*模块参数*
+
         # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
         local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tvsget1 目录下
           mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
