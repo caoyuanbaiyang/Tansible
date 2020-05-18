@@ -38,9 +38,20 @@ class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
-    def donwload_from_linux(self, sftp, local_dir, remote_dir, excludes=[]):
+    def donwload_from_linux(self, sftp, local_dir, remote_dir, excludes=None, includes=None):
+        if excludes is None:
+            excludes = []
+        if includes is None:
+            includes = []
+
         if not isContrainSpecialCharacter(remote_dir):
-            self.sftp_get_dir_exclude(sftp, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes)
+            # 只有在remote dir 为文件夹（以/结尾）时，才支持include设置
+            if remote_dir.endswith("/") and len(includes) > 0:
+                for include in includes:
+                    self.sftp_get_dir_exclude(sftp, os.path.join(local_dir, include),
+                                              os.path.join(remote_dir, include) + "/", excludes)
+            else:
+                self.sftp_get_dir_exclude(sftp, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes)
         else:
             (tmp_remote_dir, filename) = os.path.split(remote_dir)
             for file in sftp.listdir_attr(tmp_remote_dir):
@@ -60,7 +71,13 @@ class ModelClass(object):
 
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
         if remote_dir.endswith("/"):
+            print(remote_dir)
             for file in sftp.listdir_attr(remote_dir):
+                # debug
+
+                if file == "temp":
+                    print(file)
+                # debug
                 remote_path_filename = Path(os.path.join(remote_dir, file.filename)).as_posix()
 
                 # 如果判断为无需下载的文件，则跳过本次循环，处理下一个文件名词
@@ -92,6 +109,11 @@ class ModelClass(object):
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
+
+        if not ("include" in cfg_value) or cfg_value["include"] is None:
+            cfg_value["include"] = []
+        includes = cfg_value["include"]
+
         if cfg_key == "{HOME}":  # 无子目录
             local_dir = local_home
         else:           # 有子目录
@@ -99,7 +121,8 @@ class ModelClass(object):
         if action == "download":
             if not os.path.exists(local_dir):
                 os.makedirs(local_dir)
-            self.donwload_from_linux(sftp, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes)
+            self.donwload_from_linux(sftp, local_dir=local_dir, remote_dir=remote_dir,
+                                     excludes=excludes, includes=includes)
         if action == "upload":
             if not remote_dir.endswith("/"):
                 (remote_dir, tmp_filename) = os.path.split(remote_dir)
