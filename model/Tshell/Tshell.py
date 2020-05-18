@@ -2,44 +2,51 @@
 
 import json
 import os
+import time
+
+import chardet
 import paramiko
+
+
+def ssh_reply(chanel_recv):
+    whcode = chardet.detect(chanel_recv)['encoding']
+    reply = chanel_recv.decode(whcode, 'ignore')
+    return reply
 
 
 class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
-    def execcommand(self, ssh, command, stdinfo=[], timeout=5):
+    def execcommand(self, ssh, command, timeout=5):
         try:
-            stdin, stdout, stderr = ssh.exec_command("echo $LANG")
-            langset = stdout.readlines()[0].replace("\n", "").split(".")[1]
+            chanel = ssh.invoke_shell()
+            chanel.send("export LANG=en_US.UTF-8 \n")
+            time.sleep(0.01)
+            chanel.send(command + "\n")
+            time.sleep(0.01)
+
+            buff = ""
+            i = 0
+            while not buff.endswith("$ "):
+                resp = chanel.recv(9999)
+                time.sleep(0.01)
+                reply = ssh_reply(resp)
+                buff = reply
+                i = i + 1
+                while i > 50:
+                    break
+
         except paramiko.ssh_exception.SSHException:
-            self.mylog.info("LANG获取失败")
-            raise Exception("LANG获取失败")
-        try:
-            stdin, stdout, stderr = ssh.exec_command(command, timeout=timeout)
-            self.mylog.info(command)
-            for info in stdinfo:
-                stdin.write(info+"\n")
-                self.mylog.info(info)
-            if stderr.readable():
-                err = stderr.read()
-                err = err.decode(langset)
-            if stdout.readable():
-                out = stdout.read()
-                out = out.decode(langset)
-            self.mylog.info("命令out:\n"+"".join(out))
-        except paramiko.ssh_exception.SSHException:
-            self.mylog.info("命令执行失败:"+command)
-            return [False, "命令执行失败:"+command]
+            self.mylog.info("命令执行失败:" + command)
+            return [False, "命令执行失败:" + command]
         except Exception as e:
             self.mylog.info(e)
-            self.mylog.info("命令执行失败:"+command)
+            self.mylog.info("命令执行失败:" + command)
             return [False, e]
-        if len(err) != 0:
-            self.mylog.info("命令err:" + "".join(err))
-            return [False, "".join(err)]
-        return [True, out]
+
+        self.mylog.info(buff)
+        return [True, buff]
 
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
