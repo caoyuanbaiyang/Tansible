@@ -157,7 +157,7 @@ class ModelClass(object):
         if not ("link" in cfg_value) or cfg_value["link"] is None:
             self.link = "target"
         else:
-            self.link = "content"
+            self.link = cfg_value["link"]
 
         if cfg_key == "{HOME}":  # 无子目录
             local_dir = local_home
