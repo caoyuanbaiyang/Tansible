@@ -102,16 +102,16 @@ class ModelClass(object):
             if filesize > md5filter:
                 md5cmd = "md5sum " + remote_file
                 content = self.execcommand(ssh, md5cmd)
+                self.mylog.info('  Get文件  {} size: {} 传输中...'.format(remote_file, filesize))
                 generatebigersizefile(tmp_local_filename, content[1].split()[0])
-                self.mylog.info('  Get文件  {} size: {} 传输完成...'.format(remote_file, filesize))
             else:
+                self.mylog.info('  Get文件  %s 传输中...' % remote_file)
+                self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
                 try:
                     sftp.get(remote_file, tmp_local_filename)
                 except:
                     self.mylog.info("Get文件 {file},{loc} 失败!".format(file=remote_file,
                                                                     loc=tmp_local_filename))
-                self.mylog.info('  Get文件  %s 传输完成...' % remote_file)
-                self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
 
     def sftp_get_dir_exclude(self, sftp, ssh, local_dir, remote_dir, excludes=[], md5filter=0):
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
@@ -134,7 +134,7 @@ class ModelClass(object):
             else:
                 # 软连接文件
                 # if file.longname.startswith("l") and file.st_size > md5filter:
-                if stat.S_ISLNK(file.st_mode):
+                if stat.S_ISLNK(file.st_mode) and self.link == "target":
                     self.mylog.info('  Get文件 %s 软连接 传输中...' % remote_path_filename)
                     generatebigersizefile(os.path.join(local_dir, file.filename), sftp.readlink(remote_path_filename))
                     # self.mylog.info(f"{file.filename}  {sftp.readlink(remote_path_filename)}")
@@ -153,6 +153,11 @@ class ModelClass(object):
             self.bigcontent = ["size", "mtime", "st_mode"]
         else:
             self.bigcontent = cfg_value["bigcontent"]
+
+        if not ("link" in cfg_value) or cfg_value["link"] is None:
+            self.link = "target"
+        else:
+            self.link = "content"
 
         if cfg_key == "{HOME}":  # 无子目录
             local_dir = local_home
@@ -175,3 +180,4 @@ class ModelClass(object):
             if cfg_key not in ["local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
                 self.__acton_inner(sftp, ssh, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
+
