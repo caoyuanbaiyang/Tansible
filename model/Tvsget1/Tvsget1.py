@@ -74,7 +74,7 @@ class ModelClass(object):
             stdin, stdout, stderr = ssh.exec_command(command, timeout=timeout)
             # self.mylog.info(command)
             for info in stdinfo:
-                stdin.write(info+"\n")
+                stdin.write(info + "\n")
                 self.mylog.info(info)
             if stderr.readable():
                 err = stderr.read()
@@ -85,10 +85,10 @@ class ModelClass(object):
             # self.mylog.info("命令out:"+"".join(out))
         except paramiko.ssh_exception.SSHException:
             # self.mylog.info("命令执行失败:"+command)
-            return [False, "命令执行失败:"+command]
+            return [False, "命令执行失败:" + command]
         except Exception as e:
             self.mylog.info(e)
-            self.mylog.info("命令执行失败:"+command)
+            self.mylog.info("命令执行失败:" + command)
             return [False, e]
         if len(err) != 0:
             self.mylog.info("命令err:" + "".join(err))
@@ -127,13 +127,20 @@ class ModelClass(object):
                 tmp_local_dir = os.path.join(local_dir, file.filename)
                 if not os.path.exists(tmp_local_dir):
                     os.makedirs(tmp_local_dir)
-                self.sftp_get_dir_exclude(sftp, ssh, local_dir=tmp_local_dir, remote_dir=remote_path_filename ,
+                self.sftp_get_dir_exclude(sftp, ssh, local_dir=tmp_local_dir, remote_dir=remote_path_filename,
                                           excludes=excludes, md5filter=md5filter)
                 self.mylog.info('Get文件夹%s 传输中...' % remote_path_filename)
-                self.mylog.info('   位置  {loc_dir}:' .format(loc_dir=tmp_local_dir))
+                self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
             else:
-                self.sftp_get_file_exclude(sftp, ssh, local_dir, remote_path_filename, excludes, md5filter
-                                           , file.st_size)
+                # 软连接文件
+                # if file.longname.startswith("l") and file.st_size > md5filter:
+                if stat.S_ISLNK(file.st_mode):
+                    self.mylog.info('  Get文件 %s 软连接 传输中...' % remote_path_filename)
+                    generatebigersizefile(os.path.join(local_dir, file.filename), sftp.readlink(remote_path_filename))
+                    # self.mylog.info(f"{file.filename}  {sftp.readlink(remote_path_filename)}")
+                else:
+                    self.sftp_get_file_exclude(sftp, ssh, local_dir, remote_path_filename, excludes, md5filter
+                                               , file.st_size)
 
     def __acton_inner(self, sftp, ssh, local_home, cfg_key, cfg_value):
         remote_dir = cfg_value["remote_dir"]
@@ -149,12 +156,13 @@ class ModelClass(object):
 
         if cfg_key == "{HOME}":  # 无子目录
             local_dir = local_home
-        else:           # 有子目录
+        else:  # 有子目录
             local_dir = os.path.join(local_home, cfg_key)
 
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
-        self.donwload_from_linux(sftp, ssh, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes, md5filter=md5filter)
+        self.donwload_from_linux(sftp, ssh, local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
+                                 md5filter=md5filter)
 
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
@@ -166,4 +174,4 @@ class ModelClass(object):
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
-                self.__acton_inner(sftp, ssh,  local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
+                self.__acton_inner(sftp, ssh, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
