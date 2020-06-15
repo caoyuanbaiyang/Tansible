@@ -38,15 +38,15 @@ ACTION:
 ###### GetHostList, 获取主机列表
 *模块参数*
 
-无
+        # 无
 ###### CheckConnect, 检查SSH连接
 *模块参数*
 
-无
+        # 无
 ###### CheckHostname, 检查hosts.yaml与实际主机名
 *模块参数*
 
-无
+        # 无
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
 
@@ -81,7 +81,7 @@ ACTION:
 ###### SysPwdModify，系统用户密码调整
 *模块参数*
 
-        # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
+        # 该模块提供系统用户密码修改功能
           current_pwd: 当前密码   # 所有主机的当前密码一样
           new_pwd: 新密码        # 所有主机的新密码一样
           current_pwd_file:  current_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存当前密码
