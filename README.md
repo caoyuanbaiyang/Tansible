@@ -53,7 +53,7 @@ ACTION:
         # 该模块提供单个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
         # 下载到download\dbpwdmodify 目录下
         # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
-          cfg_file: /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
+          cfg_file : /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
           instr: 'spring.datasource.password=' 
           pwd: *BlowFish
           action:
@@ -96,11 +96,11 @@ ACTION:
 
         # 该模块提供下载，上传功能        
         # action 提供download,upload选项，分别为下载，上传
-          local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
+          local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
           '{HOME}': # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
             remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配
-            include: [yy, zz]  # 该参数只对下载有用
-            exclude: [logs, log, csdklog, '*log', nohup.out]
+            include: [yy, zz]  # 可选参数，该参数只对下载有用
+            exclude: [logs, log, csdklog, '*log', nohup.out] # 可选参数
           action: download 
 ###### Tshell，远程执行命令模块
 *模块参数*
@@ -119,20 +119,20 @@ ACTION:
 *模块参数*
 
         # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
-        local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
+        local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
           mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
             remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
-            exclude: [不下载的文件在这里]
+            exclude: [不下载的文件在这里] # 可选参数
             md5filter: 30000  # 文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
-            bigcontent:  size # 可选配置项目，可设置"size", "mtime", "st_mode",不配置则默认全部获取
+            bigcontent:  size # 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
 ###### Tvsget1，版本下载模块，大文件获取MD5码
 *模块参数*
 
         # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
-        local_dir: 本地存放路径，可选，如果不设置则默认下载到download\Tvsget1 目录下
+        local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
           mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
             remote_dir: /home/sgeapp/ #远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
-            exclude: [不下载的文件在这里]
+            exclude: [不下载的文件在这里] # 可选参数
             md5filter: 30000   # 文件大于该值则不下载文件而是获取文件的md5码
 
 
@@ -143,3 +143,9 @@ ACTION:
 3.  提交代码
 4.  新建 Pull Request
 
+model 开发
+  class ModelClass(object):
+    def __init__(self, mylog):
+        self.mylog = mylog
+    def action(self, ssh, hostname, param, hostparam=None):
+        # todo 
