@@ -147,7 +147,7 @@ model 模板
 
 ```
 class ModelClass(object):
-    # 初始化函数，必须包括mylog ,用于日志记录的
+    # 初始化函数，必须包括lib.Logger类mylog ,用于日志记录的
     def __init__(self, mylog):
         self.mylog = mylog
     # 实际动作函数
