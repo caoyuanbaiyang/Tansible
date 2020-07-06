@@ -146,11 +146,22 @@ ACTION:
 model 模板
 
 ```
+# 模块的类名称固定为ModelClass,必须包含__init__初始化函数及action动作函数
 class ModelClass(object):
     # 初始化函数，必须包括lib.Logger类mylog ,用于日志记录的
     def __init__(self, mylog):
         self.mylog = mylog
-    # 实际动作函数
+    # 实际动作函数，必须包括如下的参数
     def action(self, ssh, hostname, param, hostparam=None):
-        # todo
+        # ssh 会话连接
+        # hostname 主机名
+        # param 模块参数
+        # hostparam 主机参数，参考host.yaml
 ```       
+self.mylog 用法如下：
+    self.mylog.debug('一个debug信息')
+    self.mylog.info('一个info信息')
+    self.mylog.war('一个warning信息')
+    self.mylog.error('一个error信息')
+    self.mylog.cri('一个致命critical信息')
+    
