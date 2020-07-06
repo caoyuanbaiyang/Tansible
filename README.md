@@ -159,6 +159,7 @@ class ModelClass(object):
         # hostparam 主机参数，参考host.yaml
 ```       
 self.mylog 用法如下：
+
     self.mylog.debug('一个debug信息')
     self.mylog.info('一个info信息')
     self.mylog.war('一个warning信息')
