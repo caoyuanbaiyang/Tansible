@@ -28,6 +28,7 @@ class ModelClass(object):
         chanel.send(command + "\n")
         time.sleep(0.05)
 
+        return_bool = True
         buff = ""
         i = 0
 
@@ -51,12 +52,15 @@ class ModelClass(object):
             resp = chanel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
+            if "BAD PASSWORD" in buff:
+                return_bool = False
+                break
             i = i + 1
             while i > 50:
                 break
 
         self.mylog.info(buff)
-        return [True, buff]
+        return [return_bool, buff]
 
     def modifyNewPassword(self, hostname, ssh, password, newpassword):
         stdinfo = [password, newpassword, newpassword]
