@@ -69,6 +69,10 @@ class ModelClass(object):
         if type(rs[1]) == str:
             if "successfully" in rs[1] or "成功" in rs[1]:
                 self.mylog.info("修改密码：主机{}修改成功".format(hostname))
+            elif "manipulation error" in rs[1]:
+                self.mylog.error("修改密码：主机{}修改失败,当前密码错误".format(hostname))
+            elif "BAD PASSWORD" in rs[1]:
+                self.mylog.error("修改密码：主机{}修改失败,新密码不符合要求".format(hostname))
             else:
                 self.mylog.error("修改密码：主机{}修改失败".format(hostname))
 
