@@ -83,7 +83,8 @@ class Tansible(object):
             hostname_list, err_host_list = hostobj.get_host_name(action["hosts"])
             for task in action["tasks"]:
                 # 遍历task列表
-                self.mylog.info('#########执行任务：{task}#########'.format(task=task["name"]))
+                if "name" in task:
+                    self.mylog.info('#########执行任务：{task}#########'.format(task=task["name"]))
                 # 模块信息
                 for modelname, param in task.items():
                     if modelname == "name":
