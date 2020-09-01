@@ -106,6 +106,8 @@ class ModelClass(object):
 
     def __acton_inner(self, sftp, local_home, cfg_key, cfg_value, action):
         remote_dir = cfg_value["remote_dir"]
+        if "$HOME" in remote_dir:
+            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
@@ -153,6 +155,7 @@ class ModelClass(object):
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
             hostparam = []
+        self.hostparam = hostparam
         if param["action"] not in ["download", "upload"]:
             raise Exception('配置文件配置错误:未知action参数:{action}'.format(action=json.dumps(param["action"])))
 
@@ -163,4 +166,5 @@ class ModelClass(object):
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["action", "local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
-                self.__acton_inner(sftp, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value, action=param["action"])
+                self.__acton_inner(sftp, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value,
+                                   action=param["action"])
