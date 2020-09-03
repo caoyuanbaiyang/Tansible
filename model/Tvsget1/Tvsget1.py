@@ -144,6 +144,8 @@ class ModelClass(object):
 
     def __acton_inner(self, sftp, ssh, local_home, cfg_key, cfg_value):
         remote_dir = cfg_value["remote_dir"]
+        if "$HOME" in remote_dir:
+            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
@@ -172,6 +174,7 @@ class ModelClass(object):
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
             hostparam = []
+        self.hostparam = hostparam
         if not ("local_dir" in param) or param["local_dir"] is None:
             param["local_dir"] = os.path.join("download", os.path.splitext(os.path.basename(__file__))[0])
 
