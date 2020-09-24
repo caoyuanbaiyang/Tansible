@@ -123,7 +123,7 @@ ACTION:
       # 该模块提供上传文件的功能
       simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
       source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
-      dest_dir: /root/upload/  #上传目的路径
+      dest_dir: /root/upload/  #上传目的路径,$HOME表示/home/用户名/
       exclude: [start.sh]      #不上传的文件及文件夹列表
 ```
 ###### Tvsget，版本下载模块，大文件获取size，mtime，st_mode
