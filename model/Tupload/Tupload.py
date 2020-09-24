@@ -62,6 +62,7 @@ class ModelClass(object):
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
             hostparam = []
+        self.hostparam = hostparam
         sftp = paramiko.SFTPClient.from_transport(ssh.get_transport())
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["simple_type", "source_dir", "dest_dir", "exclude"]:
@@ -69,6 +70,8 @@ class ModelClass(object):
 
         local_dir = param["source_dir"]
         remote_dir = param["dest_dir"]
+        if "$HOME" in remote_dir:
+            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
         if param["simple_type"] == 1:
             # 简单方式，目录下面没有主机名文件夹
             if not local_dir.endswith("/"):
