@@ -114,8 +114,10 @@ ACTION:
 ###### Tshell，远程执行命令模块
 *模块参数*
 
-          # 该模块提供运程执行命令的功能
-          cmd: 'hostname'
+```yaml
+      # 该模块提供运程执行命令的功能
+      cmd: 'hostname'
+```
 ###### Tupload，上传模块
 *模块参数*
 
@@ -160,6 +162,8 @@ ACTION:
 
 model 模板
 
+模板文件位置：model/模块名称/模块名称.py
+
 ```python
 # 模块的类名称固定为ModelClass,必须包含__init__初始化函数及action动作函数
 class ModelClass(object):
@@ -173,7 +177,7 @@ class ModelClass(object):
         # param 模块参数
         # hostparam 主机参数，参考host.yaml
 ```
-self.mylog 用法如下：
+self.mylog 为lib.Logger.py 中的类，用法如下：
 
 ```python
 self.mylog.debug('一个debug信息')
