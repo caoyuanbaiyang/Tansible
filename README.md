@@ -108,7 +108,7 @@ ACTION:
       '{HOME}': # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
         remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配,$HOME表示/home/用户名/
         include: [yy, zz]  # 可选参数，该参数只对下载有用
-        exclude: [logs, log, csdklog, '*log', nohup.out] # 可选参数
+        exclude: [logs, log, csdklog, '*log', nohup.out] # 可选参数，该参数只对下载有用
       action: download 
 ```
 ###### Tshell，远程执行命令模块
