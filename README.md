@@ -107,6 +107,8 @@ ACTION:
       local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
       '{HOME}': # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
         remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配,$HOME表示/home/用户名/
+                              # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
+                              # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
         include: [yy, zz]  # 可选参数，该参数只对下载有用
         exclude: [logs, log, csdklog, '*log', nohup.out] # 可选参数，该参数只对下载有用
       action: download 
