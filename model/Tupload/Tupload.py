@@ -83,7 +83,7 @@ class ModelClass(object):
                 self.mylog.info(r'     位置  {file} 传输中...'.format(file=remote_dir))
                 sftp.put(local_dir, remote_dir)
             else:
-                self.sftp_put_dir_exclude(sftp, remote_dir=param["dest_dir"], local_dir=param["source_dir"],
+                self.sftp_put_dir_exclude(sftp, remote_dir=remote_dir, local_dir=local_dir,
                                           excludes=param["exclude"])
         elif param["simple_type"] == 0:
             # 复杂方式，目录下面有主机名文件夹，需要根据主机名文件夹进行上传
