@@ -66,17 +66,17 @@ class ModelClass(object):
         if not remote_dir.endswith("/"):
             (tmp_dir, filename) = os.path.split(remote_dir)
             if not (filename in excludes or remote_dir in excludes):
+                self.mylog.info('  Get文件  %s 传输中...' % remote_dir)
                 sftp.get(remote_dir, os.path.join(local_dir, filename))
-                self.mylog.info('  Get文件  %s 传输完成...' % remote_dir)
 
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
         if remote_dir.endswith("/"):
-            print(remote_dir)
+            # print(remote_dir)
             for file in sftp.listdir_attr(remote_dir):
                 # debug
 
-                if file == "temp":
-                    print(file)
+                # if file == "temp":
+                #     print(file)
                 # debug
                 remote_path_filename = Path(os.path.join(remote_dir, file.filename)).as_posix()
 
@@ -93,21 +93,22 @@ class ModelClass(object):
                     self.sftp_get_dir_exclude(sftp, local_dir=tmp_local_dir, remote_dir=remote_path_filename + "/",
                                               excludes=excludes)
                     self.mylog.info('Get文件夹%s 传输中...' % remote_path_filename)
-                    self.mylog.info('   位置  {loc_dir}:' .format(loc_dir=tmp_local_dir))
+                    self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
                 else:
                     tmp_local_filename = os.path.join(local_dir, file.filename)
                     try:
+                        self.mylog.info('  Get文件  %s 传输中...' % remote_path_filename)
+                        self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
                         sftp.get(remote_path_filename, tmp_local_filename)
                     except:
-                        self.mylog.info("Get文件 {file},{loc} 失败!".format(file=remote_path_filename, loc=tmp_local_filename))
+                        self.mylog.info(
+                            "Get文件 {file},{loc} 失败!".format(file=remote_path_filename, loc=tmp_local_filename))
                         # self.mylog.info("Get文件  {file} 失败".format(host=hostname, file=remote_file))
-                    self.mylog.info('  Get文件  %s 传输完成...' % remote_path_filename)
-                    self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
 
     def __acton_inner(self, sftp, local_home, cfg_key, cfg_value, action):
         remote_dir = cfg_value["remote_dir"]
         if "$HOME" in remote_dir:
-            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
+            remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
@@ -118,7 +119,7 @@ class ModelClass(object):
 
         if cfg_key == "{HOME}":  # 无子目录
             local_dir = local_home
-        else:           # 有子目录
+        else:  # 有子目录
             local_dir = os.path.join(local_home, cfg_key)
         if action == "download":
             if not os.path.exists(local_dir):
@@ -149,7 +150,7 @@ class ModelClass(object):
             else:
                 remote_filename = Path(os.path.join(remote_dir, file)).as_posix()
                 self.mylog.info(r'  Put文件  %s 传输中...' % loc_path_filename)
-                self.mylog.info(r'     位置  {file} 传输中...' .format(file=remote_filename))
+                self.mylog.info(r'     位置  {file} 传输中...'.format(file=remote_filename))
                 sftp.put(loc_path_filename, remote_filename)
 
     def action(self, ssh, hostname, param, hostparam=None):

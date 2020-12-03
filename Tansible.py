@@ -85,7 +85,7 @@ class Tansible(object):
             for task in action["tasks"]:
                 # 遍历task列表
                 if "name" in task:
-                    self.mylog.info('#########执行任务：{task}#########'.format(task=task["name"]))
+                    self.mylog.info('*********执行任务：{task}*********'.format(task=task["name"]))
                 # 模块信息
                 for modelname, param in task.items():
                     if modelname == "name":
