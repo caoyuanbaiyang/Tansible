@@ -33,6 +33,11 @@ class logger:
         self.logger.addHandler(sh)
         self.logger.addHandler(fh)
 
+    def green(self, message, color=FOREGROUND_GREEN):
+        set_color(color)
+        self.logger.info(message)
+        set_color(FOREGROUND_WHITE)
+
     def debug(self, message):
         self.logger.debug(message)
 

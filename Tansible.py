@@ -78,6 +78,7 @@ class Tansible(object):
             self.mylog.cri(f"action 配置文件中hosts配置错误，hosts.yaml无相关配置：{rzlist}")
             raise Exception("action 配置文件hosts配置错误")
 
+        self.mylog.green(f'############开始任务{action_file}############')
         for action in self.action_cfg["ACTION"]:
             # 遍历hosts列表
             hostname_list, err_host_list = hostobj.get_host_name(action["hosts"])
@@ -94,4 +95,4 @@ class Tansible(object):
                         continue
                     for hostname in hostname_list:
                         self.__action_func_inner(hostname, modelname, param)
-        self.mylog.info('#########所有任务完成#########')
+        self.mylog.green('############所有任务完成############')
