@@ -31,9 +31,10 @@ class ModelClass(object):
         return_bool = True
         buff = ""
         i = 0
-
+        self.mylog.info("开始查找assword:")
         while not (buff.endswith("assword: ") or buff.endswith("密码：")):
-            time.sleep(0.01)
+            self.mylog.info("查找assword:...")
+            time.sleep(0.1)
             resp = chanel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
@@ -41,13 +42,15 @@ class ModelClass(object):
             while i > 50:
                 break
 
+        self.mylog.info("输入信息")
         for info in stdinfo:
             chanel.send(info)
             chanel.send("\n")
-            time.sleep(0.1)
+            time.sleep(0.2)
 
         buff = ""
         i = 0
+        self.mylog.info("开始查找$ ")
         while not buff.endswith("$ "):
             resp = chanel.recv(9999)
             reply = ssh_reply(resp)
