@@ -68,7 +68,7 @@ class ModelClass(object):
             stdin, stdout, stderr = ssh.exec_command("echo $LANG")
             langset = stdout.readlines()[0].replace("\n", "").split(".")[1]
         except paramiko.ssh_exception.SSHException:
-            self.mylog.info("LANG获取失败")
+            self.mylog.error("LANG获取失败")
             raise Exception("LANG获取失败")
         try:
             stdin, stdout, stderr = ssh.exec_command(command, timeout=timeout)
@@ -88,10 +88,10 @@ class ModelClass(object):
             return [False, "命令执行失败:" + command]
         except Exception as e:
             self.mylog.info(e)
-            self.mylog.info("命令执行失败:" + command)
+            self.mylog.error("命令执行失败:" + command)
             return [False, e]
         if len(err) != 0:
-            self.mylog.info("命令err:" + "".join(err))
+            self.mylog.error("命令err:" + "".join(err))
             return [False, "".join(err)]
         return [True, out]
 
@@ -110,8 +110,8 @@ class ModelClass(object):
                 try:
                     sftp.get(remote_file, tmp_local_filename)
                 except:
-                    self.mylog.info("Get文件 {file},{loc} 失败!".format(file=remote_file,
-                                                                    loc=tmp_local_filename))
+                    self.mylog.error("Get文件 {file},{loc} 失败!".format(file=remote_file,
+                                                                     loc=tmp_local_filename))
 
     def sftp_get_dir_exclude(self, sftp, ssh, local_dir, remote_dir, excludes=[], md5filter=0):
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
@@ -145,7 +145,7 @@ class ModelClass(object):
     def __acton_inner(self, sftp, ssh, local_home, cfg_key, cfg_value):
         remote_dir = cfg_value["remote_dir"]
         if "$HOME" in remote_dir:
-            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
+            remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
@@ -183,4 +183,3 @@ class ModelClass(object):
             if cfg_key not in ["local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
                 self.__acton_inner(sftp, ssh, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
-
