@@ -21,8 +21,7 @@ def main():
         print("选择退出...")
     if choise == "y":
         if len(sys.argv) == 2:
-            root_dir = os.path.abspath('.')
-            configpath = os.path.join(root_dir, "config", sys.argv[1])
+            configpath = os.path.join("config", sys.argv[1])
             obj = Tansible(configpath)
             obj.action_func()
         else:
