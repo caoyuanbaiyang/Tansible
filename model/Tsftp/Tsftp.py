@@ -101,7 +101,7 @@ class ModelClass(object):
                         self.mylog.info('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
                         sftp.get(remote_path_filename, tmp_local_filename)
                     except:
-                        self.mylog.info(
+                        self.mylog.error(
                             "Get文件 {file},{loc} 失败!".format(file=remote_path_filename, loc=tmp_local_filename))
                         # self.mylog.info("Get文件  {file} 失败".format(host=hostname, file=remote_file))
 
