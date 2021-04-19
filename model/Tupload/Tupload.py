@@ -56,7 +56,7 @@ class ModelClass(object):
             else:
                 remote_filename = Path(os.path.join(remote_dir, file)).as_posix()
                 self.mylog.info(r'  Put文件  %s 传输中...' % loc_path_filename)
-                self.mylog.info(r'     位置  {file} 传输中...' .format(file=remote_filename))
+                self.mylog.info(r'     位置  {file} 传输中...'.format(file=remote_filename))
                 sftp.put(loc_path_filename, remote_filename)
 
     def action(self, ssh, hostname, param, hostparam=None):
@@ -69,26 +69,35 @@ class ModelClass(object):
                 raise Exception('配置文件配置错误:未知参数:{param}'.format(param=json.dumps(param)))
 
         local_dir = param["source_dir"]
-        remote_dir = param["dest_dir"]
-        if "$HOME" in remote_dir:
-            remote_dir = remote_dir.replace("$HOME", "/home/"+self.hostparam["username"])
-        if param["simple_type"] == 1:
-            # 简单方式，目录下面没有主机名文件夹
-            if not local_dir.endswith("/"):
-                if remote_dir.endswith("/"):
-                    # 本地为文件 目的没有设置文件名
-                    (tmp_path, tmp_file) = os.path.split(local_dir)
-                    remote_dir = os.path.join(remote_dir, tmp_file)
-                self.mylog.info(r'  Put文件  %s 传输中...' % local_dir)
-                self.mylog.info(r'     位置  {file} 传输中...'.format(file=remote_dir))
-                sftp.put(local_dir, remote_dir)
-            else:
-                self.sftp_put_dir_exclude(sftp, remote_dir=remote_dir, local_dir=local_dir,
+        remote_lst_v = param["dest_dir"]
+        remote_lst = []
+        if isinstance(remote_lst_v, list):
+            remote_lst = remote_lst_v
+        if isinstance(remote_lst_v, str):
+            remote_lst.append(remote_lst_v)
+        if not isinstance(remote_lst_v, list) and not isinstance(remote_lst_v, str):
+            raise Exception('配置文件配置错误:参数dest_dir类型必须是字符串或列表:{param}'.format(param=json.dumps(param)))
+
+        for remote_dir in remote_lst:
+            if "$HOME" in remote_dir:
+                remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
+            if param["simple_type"] == 1:
+                # 简单方式，目录下面没有主机名文件夹
+                if not local_dir.endswith("/"):
+                    if remote_dir.endswith("/"):
+                        # 本地为文件 目的没有设置文件名
+                        (tmp_path, tmp_file) = os.path.split(local_dir)
+                        remote_dir = os.path.join(remote_dir, tmp_file)
+                    self.mylog.info(r'  Put文件  %s 传输中...' % local_dir)
+                    self.mylog.info(r'     位置  {file} 传输中...'.format(file=remote_dir))
+                    sftp.put(local_dir, remote_dir)
+                else:
+                    self.sftp_put_dir_exclude(sftp, remote_dir=remote_dir, local_dir=local_dir,
+                                              excludes=param["exclude"])
+            elif param["simple_type"] == 0:
+                # 复杂方式，目录下面有主机名文件夹，需要根据主机名文件夹进行上传
+                local_dir = os.path.join(param["source_dir"], hostname)
+                self.sftp_put_dir_exclude(sftp, remote_dir=param["dest_dir"], local_dir=local_dir,
                                           excludes=param["exclude"])
-        elif param["simple_type"] == 0:
-            # 复杂方式，目录下面有主机名文件夹，需要根据主机名文件夹进行上传
-            local_dir = os.path.join(param["source_dir"], hostname)
-            self.sftp_put_dir_exclude(sftp, remote_dir=param["dest_dir"], local_dir=local_dir,
-                                      excludes=param["exclude"])
-        else:
-            raise Exception('配置文件配置错误:未知simple_type参数:{simple_type}'.format(param=json.dumps(param)))
+            else:
+                raise Exception('配置文件配置错误:未知simple_type参数:{simple_type}'.format(param=json.dumps(param)))
