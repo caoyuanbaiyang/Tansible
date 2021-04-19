@@ -81,6 +81,14 @@ class Tansible(object):
             raise Exception("action 配置文件hosts配置错误")
 
         self.mylog.green(f'############开始任务{self.cfgfilepath}############')
+        choise = input("是否运行，借机调整窗口大小吧（y/n）：")
+        if choise not in ["y", "n"]:
+            print("输入错误")
+            raise Exception("输入错误")
+        if choise == "n":
+            print("选择退出...")
+            raise Exception("选择退出...")
+
         for action in self.action_cfg["ACTION"]:
             # 遍历hosts列表
             hostname_list, err_host_list = hostobj.get_host_name(action["hosts"])

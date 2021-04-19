@@ -14,22 +14,15 @@ def myfunc():
 
 
 def main():
-    choise = input("是否运行，借机调整窗口大小吧（y/n）：")
-    if choise not in ["y", "n"]:
-        print("输入错误")
-    if choise == "n":
-        print("选择退出...")
-    if choise == "y":
-        if len(sys.argv) == 2:
-            configpath = os.path.join("config", sys.argv[1])
-            obj = Tansible(configpath)
-            obj.action_func()
-        else:
-            obj = Tansible()
-            obj.action_func()
+    if len(sys.argv) == 2:
+        configpath = os.path.join("config", sys.argv[1])
+        obj = Tansible(configpath)
+        obj.action_func()
+    else:
+        obj = Tansible()
+        obj.action_func()
 
 
 if __name__ == '__main__':
     main()
     # myfunc()
-
