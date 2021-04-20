@@ -14,12 +14,62 @@ python paramiko
 
 #### 使用说明
 
-1.  hosts.yaml 文件中创建主机相关信息
-2.  groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
+1.  config/hosts.yaml 文件中创建主机相关信息
+2.  config/groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
 3.  按需创建action文件，action.yaml是默认文件，文件名称可自定义
     cmd>Tansible.exe #运行的是action.yaml中的配置
     cmd>Tansible.exe test.yaml #运行的是config/test.yaml 中的配置
 4.  建议创建指定bat文件，关联action文件，以方便执行相关任务
+
+#### hosts.yaml文件配置说明
+该文件的配置信息主要用于连接远程机器用，如IP,用户名，密码或秘钥文件等信息。
+```yaml
+PUBLIC:
+    #公共参数部分,如果HOST部分有相关配置，则优先使用HOST的配置
+    # 秘钥文件
+    key_filename: config/id_rsa
+    # 秘钥文件密码
+    passphrase: 123
+    # 连接方式 1 表示采用密码的方式，2 表示采用秘钥文件的方式
+    connet_type: 2  # 1 password  2 rsa
+    # 用户名
+    username: root
+    # 密码
+    password: password
+HOST:
+  #  
+  host1:
+    ip: 127.0.1.131
+  host2:
+    ip: 127.0.1.132
+  host3:
+    ip: 192.168.128.140
+    connet_type: 1
+    username: root
+    password: redhat123
+  host4:
+    ip: 192.168.128.141
+    connet_type: 1
+```
+
+#### group.yaml文件配置说明
+对同类机器进行创建群组，方便维护
+
+```yaml
+group1:
+  - host1
+  - host2
+
+group2:
+  - host3
+  - host4
+
+
+apart:
+  children:
+    - group1
+    - group2
+```
 
 #### action文件配置说明
 ```yaml
