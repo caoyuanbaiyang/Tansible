@@ -17,8 +17,8 @@ python paramiko
 1.  config/hosts.yaml 文件中创建主机相关信息
 2.  config/groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
 3.  按需创建action文件，action.yaml是默认文件，文件名称可自定义
-    cmd>Tansible.exe #运行的是action.yaml中的配置
-    cmd>Tansible.exe test.yaml #运行的是config/test.yaml 中的配置
+    - cmd>Tansible.exe #运行的是action.yaml中的配置
+    - cmd>Tansible.exe test.yaml #运行的是config/test.yaml 中的配置
 4.  建议创建指定bat文件，关联action文件，以方便执行相关任务
 
 #### hosts.yaml文件配置说明
