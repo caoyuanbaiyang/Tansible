@@ -59,7 +59,7 @@ ACTION:
     # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
       cfg_file : /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
       instr: 'spring.datasource.password=' 
-      pwd: *BlowFish
+      pwd: BlowFish
       action:
         - DOWNLOAD
 ```
@@ -77,11 +77,11 @@ ACTION:
         # instr 用于查找行，并对instr字符后面的内容用新的密码进行替换
         instr: 'spring.datasource.password='
         # pwd 设置新密码
-        pwd: *BlowFish
+        pwd: BlowFish
       quote:
         cfg_file: /home/xx/yy/webapps/quote/WEB-INF/conf/application-jdbc.properties
         instr: 'spring.datasource.password='
-        pwd: *BlowFish
+        pwd: BlowFish
       action:
         - DOWNLOAD
 ```
@@ -175,19 +175,20 @@ class ModelClass(object):
     # 初始化函数，必须包括lib.Logger类mylog ,用于日志记录的
     def __init__(self, mylog):
         self.mylog = mylog
+        # self.mylog 为lib.Logger.py 中的类，用法如下：
+        
+        # self.mylog.debug('一个debug信息')
+        # self.mylog.info('一个info信息')
+        # self.mylog.war('一个warning信息')
+        # self.mylog.error('一个error信息')
+        # self.mylog.cri('一个致命critical信息')
     # 实际动作函数，必须包括如下的参数
     def action(self, ssh, hostname, param, hostparam=None):
         # ssh 会话连接
         # hostname 主机名
         # param 模块参数
         # hostparam 主机参数，参考host.yaml
+        pass
 ```
-self.mylog 为lib.Logger.py 中的类，用法如下：
 
-```python
-self.mylog.debug('一个debug信息')
-self.mylog.info('一个info信息')
-self.mylog.war('一个warning信息')
-self.mylog.error('一个error信息')
-self.mylog.cri('一个致命critical信息')
-```
+
