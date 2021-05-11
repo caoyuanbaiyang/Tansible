@@ -79,7 +79,7 @@ PUBLIC:
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
-    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机
+    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组
     tasks:
       - name: 任务说明
         SysPwdModify:  # 调用的模块，下面的设置都是模块相关的设置       
