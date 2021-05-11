@@ -188,7 +188,7 @@ ACTION:
 
 ```yaml
     # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
-    local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
+      local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
       mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
         remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
         exclude: [不下载的文件在这里] # 可选参数
@@ -200,7 +200,7 @@ ACTION:
 
 ```yaml
     # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
-    local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
+      local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
       mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
         remote_dir: /home/sgeapp/ #远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
         exclude: [不下载的文件在这里] # 可选参数
