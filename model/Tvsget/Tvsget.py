@@ -137,4 +137,4 @@ class ModelClass(object):
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
-            self.__acton_inner(sftp, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
+                self.__acton_inner(sftp, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value)
