@@ -94,13 +94,17 @@ class ModelClass(object):
         shout = []
         sherr = []
         exit_status = 0
+        # try:
+        print(type(stdout))
         for line in stdout:
-            if str(line).startswith(cmd) or str(line).startswith(echo_cmd):
+            #print(type(line))
+            line_t = line.encode('utf-8', 'ignore')
+            if str(line_t).startswith(cmd) or str(line_t).startswith(echo_cmd):
                 # up for now filled with shell junk from stdin
                 shout = []
-            elif str(line).startswith(finish):
+            elif str(line_t).startswith(finish):
                 # our finish command ends with the exit status
-                exit_status = int(str(line).rsplit(maxsplit=1)[1])
+                exit_status = int(str(line_t).rsplit(maxsplit=1)[1])
                 if exit_status:
                     # stderr is combined with stdout.
                     # thus, swap sherr with shout in a case of failure.
@@ -109,8 +113,10 @@ class ModelClass(object):
                 break
             else:
                 # get rid of 'coloring and formatting' special characters
-                shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).
+                shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line_t).
                              replace('\b', '').replace('\r', ''))
+        # except Exception as e:
+        #     pass
 
         # first and last lines of shout/sherr contain a prompt
         if shout and echo_cmd in shout[-1]:
@@ -130,4 +136,4 @@ class ModelClass(object):
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["cmd"]:
                 raise Exception('配置文件配置错误:未知参数:{param}'.format(param=json.dumps(param)))
-        self.execcommand(ssh, param["cmd"])
+        self.execcommand1(ssh, param["cmd"])
