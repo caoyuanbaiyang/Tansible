@@ -15,11 +15,69 @@ def ssh_reply(chanel_recv):
     return reply
 
 
+def execute(cmd, stdin, stdout):
+    """
+    :param stdout:
+    :param stdin:
+    :param cmd: the command to be executed on the remote computer
+    :examples:  execute('ls')
+                execute('finger')
+                execute('cd folder_name')
+    """
+    cmd = cmd.strip('\n')
+    stdin.write(cmd + '\n')
+    finish = 'end of stdOUT buffer. finished with exit status'
+    echo_cmd = 'echo {} $?'.format(finish)
+    stdin.write(echo_cmd + '\n')
+    shin = stdin
+    stdin.flush()
+
+    shout = []
+    sherr = []
+    exit_status = 0
+
+    for line_b in stdout:
+        if not chardet.detect(line_b)['encoding']:
+            __encoding = 'UTF-8'
+        else:
+            __encoding = chardet.detect(line_b)['encoding']
+        line = line_b.decode(__encoding, 'ignore')
+
+        if str(line).startswith(cmd) or str(line).startswith(echo_cmd):
+            # up for now filled with shell junk from stdin
+            shout = []
+        elif str(line).startswith(finish):
+            # our finish command ends with the exit status
+            exit_status = int(str(line).rsplit(maxsplit=1)[1])
+            if exit_status:
+                # stderr is combined with stdout.
+                # thus, swap sherr with shout in a case of failure.
+                sherr = shout
+                shout = []
+            break
+        else:
+            # get rid of 'coloring and formatting' special characters
+            shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).
+                         replace('\b', '').replace('\r', ''))
+
+    # first and last lines of shout/sherr contain a prompt
+    if shout and echo_cmd in shout[-1]:
+        shout.pop()
+    if shout and cmd in shout[0]:
+        shout.pop(0)
+    if sherr and echo_cmd in sherr[-1]:
+        sherr.pop()
+    if sherr and cmd in sherr[0]:
+        sherr.pop(0)
+
+    return shin, shout, sherr
+
+
 class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
-    def execcommand1(self, ssh, command, timeout=5):
+    def __execcommand1(self, ssh, command, timeout=5):
         try:
             chanel = ssh.invoke_shell()
             chanel.send("export LANG=en_US.UTF-8 \n")
@@ -49,13 +107,14 @@ class ModelClass(object):
         self.mylog.info(buff)
         return [True, buff]
 
-    def execcommand(self, ssh, command, timeout=5):
+    def __execcommand(self, ssh, command, timeout=5):
         try:
             channel = ssh.invoke_shell()
             stdin = channel.makefile('wb')
-            stdout = channel.makefile('r')
+            stdout = channel.makefile('rb')
             channel.send("export LANG=en_US.UTF-8 \n")
-            sin, sout, serr = self.execute(command, stdin, stdout)
+
+            sin, sout, serr = execute(command, stdin, stdout)
 
         except paramiko.ssh_exception.SSHException:
             self.mylog.info("命令执行失败:" + command)
@@ -65,70 +124,14 @@ class ModelClass(object):
             self.mylog.info("命令执行失败:" + command)
             return [False, e]
 
-        self.mylog.info("out")
         for m in sout:
+            self.mylog.info("out:")
             self.mylog.info(m.replace("\n", ""))
-        self.mylog.info("err")
         for m in serr:
+            self.mylog.info("err:")
             self.mylog.info(m.replace("\n", ""))
 
         return [True, sout]
-
-    def execute(self, cmd, stdin, stdout):
-        """
-        :param stdout:
-        :param stdin:
-        :param cmd: the command to be executed on the remote computer
-        :examples:  execute('ls')
-                    execute('finger')
-                    execute('cd folder_name')
-        """
-        cmd = cmd.strip('\n')
-        stdin.write(cmd + '\n')
-        finish = 'end of stdOUT buffer. finished with exit status'
-        echo_cmd = 'echo {} $?'.format(finish)
-        stdin.write(echo_cmd + '\n')
-        shin = stdin
-        stdin.flush()
-
-        shout = []
-        sherr = []
-        exit_status = 0
-        # try:
-        print(type(stdout))
-        for line in stdout:
-            #print(type(line))
-            line_t = line.encode('utf-8', 'ignore')
-            if str(line_t).startswith(cmd) or str(line_t).startswith(echo_cmd):
-                # up for now filled with shell junk from stdin
-                shout = []
-            elif str(line_t).startswith(finish):
-                # our finish command ends with the exit status
-                exit_status = int(str(line_t).rsplit(maxsplit=1)[1])
-                if exit_status:
-                    # stderr is combined with stdout.
-                    # thus, swap sherr with shout in a case of failure.
-                    sherr = shout
-                    shout = []
-                break
-            else:
-                # get rid of 'coloring and formatting' special characters
-                shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line_t).
-                             replace('\b', '').replace('\r', ''))
-        # except Exception as e:
-        #     pass
-
-        # first and last lines of shout/sherr contain a prompt
-        if shout and echo_cmd in shout[-1]:
-            shout.pop()
-        if shout and cmd in shout[0]:
-            shout.pop(0)
-        if sherr and echo_cmd in sherr[-1]:
-            sherr.pop()
-        if sherr and cmd in sherr[0]:
-            sherr.pop(0)
-
-        return shin, shout, sherr
 
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
@@ -136,4 +139,4 @@ class ModelClass(object):
         for cfg_key, cfg_value in param.items():
             if cfg_key not in ["cmd"]:
                 raise Exception('配置文件配置错误:未知参数:{param}'.format(param=json.dumps(param)))
-        self.execcommand1(ssh, param["cmd"])
+        self.__execcommand(ssh, param["cmd"])
