@@ -125,11 +125,9 @@ class ModelClass(object):
             return [False, e]
 
         for m in sout:
-            self.mylog.info("out:")
-            self.mylog.info(m.replace("\n", ""))
+            self.mylog.info('out:' + m.replace("\n", ""))
         for m in serr:
-            self.mylog.info("err:")
-            self.mylog.info(m.replace("\n", ""))
+            self.mylog.error('err:' + m.replace("\n", ""))
 
         return [True, sout]
 
