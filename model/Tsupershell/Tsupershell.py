@@ -21,14 +21,20 @@ class ModelClass(object):
             channel.send(command + "\n")
 
             rst = ""
+            i = 0
             while not rst.endswith("$ "):
                 time.sleep(0.1)
                 rst = channel.recv(1024)
                 rst = rst.decode('utf-8', 'ignore')
-                for line in rst.splitlines():
+                if i == 0:
+                    rst1 = rst[rst.find(command):len(rst)]
+                else:
+                    rst1 = rst
+                for line in rst1.splitlines():
                     if line != "":
-                        self.mylog.info('out: ' + line)
-                # 通过命令执行提示符来判断命令是否执行完成
+                        p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace('\r', '')
+                        self.mylog.info("out: " + p_line)
+                # 出来交互式命令
                 for c, instr in enumerate(v_lst_instr, 0):
                     if instr in rst:
                         channel.send(v_lst_input[c] + '\r')
@@ -38,8 +44,10 @@ class ModelClass(object):
                             rst = rst.decode('utf-8', 'ignore')
                             for line in rst.splitlines():
                                 if line != "":
-                                    self.mylog.info('out: ' + line)
+                                    p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace('\r', '')
+                                    self.mylog.info("out: " + p_line)
                             break
+                i = i + 1
 
         except paramiko.ssh_exception.SSHException:
             self.mylog.info("命令执行失败:" + command)
