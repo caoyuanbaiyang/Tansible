@@ -109,6 +109,9 @@ class ModelClass(object):
         remote_dir = cfg_value["remote_dir"]
         if "$HOME" in remote_dir:
             remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
+        if "$USER" in remote_dir:
+            remote_dir = remote_dir.replace("$USER", self.hostparam["username"])
+
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
         excludes = cfg_value["exclude"]
