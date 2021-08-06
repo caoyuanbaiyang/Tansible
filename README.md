@@ -159,7 +159,8 @@ ACTION:
     # action 提供download,upload选项，分别为下载，上传
       local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
       conf: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
-        remote_dir: /home/xx/ #远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾                              
+        remote_dir: /home/xx/ #远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
+                              # $USER表示host.yaml中的username
                               # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
                               # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
         include: [yy, zz]  # 可选参数，该参数只对下载有用，只有在remote_dir 为文件夹（以/结尾）时，才支持include设置,否则无效
@@ -192,7 +193,7 @@ ACTION:
       # 该模块提供上传文件的功能
       simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
       source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
-      dest_dir: /root/upload/  #上传目的路径,$HOME表示/home/用户名,注意目录需要以/结束，如果需要上传多个路径可以用[路径1,路径2，路径3]的形式
+      dest_dir: /root/upload/  #上传目的路径,$HOME表示/home/用户名,$USER表示用户名（host.yaml中的username）,注意目录需要以/结束，如果需要上传多个路径可以用[路径1,路径2，路径3]的形式
       exclude: [start.sh]      #不上传的文件及文件夹列表
 ```
 ###### Tvsget，版本下载模块，大文件获取size，mtime，st_mode
@@ -252,5 +253,4 @@ class ModelClass(object):
         # hostparam 主机参数，参考host.yaml
         pass
 ```
-
 
