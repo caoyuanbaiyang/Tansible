@@ -83,6 +83,8 @@ class ModelClass(object):
                 remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
             if "$USER" in remote_dir:
                 remote_dir = remote_dir.replace("$USER", self.hostparam["username"])
+            if "$HOSTNAME" in remote_dir:
+                remote_dir = remote_dir.replace("$HOSTNAME", hostname)
             if param["simple_type"] == 1:
                 # 简单方式，目录下面没有主机名文件夹
                 if not local_dir.endswith("/"):

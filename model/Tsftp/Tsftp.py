@@ -105,12 +105,14 @@ class ModelClass(object):
                             "Get文件 {file},{loc} 失败!".format(file=remote_path_filename, loc=tmp_local_filename))
                         # self.mylog.info("Get文件  {file} 失败".format(host=hostname, file=remote_file))
 
-    def __acton_inner(self, sftp, local_home, cfg_key, cfg_value, action):
+    def __acton_inner(self, sftp, local_home, cfg_key, cfg_value, action, hostname=None):
         remote_dir = cfg_value["remote_dir"]
         if "$HOME" in remote_dir:
             remote_dir = remote_dir.replace("$HOME", "/home/" + self.hostparam["username"])
         if "$USER" in remote_dir:
             remote_dir = remote_dir.replace("$USER", self.hostparam["username"])
+        if "$HOSTNAME" in remote_dir:
+            remote_dir = remote_dir.replace("$HOSTNAME", hostname)
 
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
@@ -171,4 +173,4 @@ class ModelClass(object):
             if cfg_key not in ["action", "local_dir"]:
                 local_home = os.path.join(param["local_dir"], hostname)
                 self.__acton_inner(sftp, local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value,
-                                   action=param["action"])
+                                   action=param["action"],hostname=hostname)
