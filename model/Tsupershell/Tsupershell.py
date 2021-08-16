@@ -30,24 +30,25 @@ class ModelClass(object):
                     rst1 = rst[rst.find(command):len(rst)]
                 else:
                     rst1 = rst
+                i = i + 1
                 for line in rst1.splitlines():
                     if line != "":
-                        p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace('\r', '')
+                        p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace(
+                            '\r', '')
                         self.mylog.info("out: " + p_line)
                 # 出来交互式命令
                 for c, instr in enumerate(v_lst_instr, 0):
                     if instr in rst:
                         channel.send(v_lst_input[c] + '\r')
-                        if c == len(v_lst_input) - 1:
-                            time.sleep(0.1)
-                            rst = channel.recv(1024)
-                            rst = rst.decode('utf-8', 'ignore')
-                            for line in rst.splitlines():
-                                if line != "":
-                                    p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b', '').replace('\r', '')
-                                    self.mylog.info("out: " + p_line)
-                            break
-                i = i + 1
+                        time.sleep(0.1)
+                        rst = channel.recv(1024)
+                        rst = rst.decode('utf-8', 'ignore')
+                        for line in rst.splitlines():
+                            if line != "":
+                                p_line = re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).replace('\b',
+                                                                                                             '').replace(
+                                    '\r', '')
+                                self.mylog.info("out: " + p_line)
 
         except paramiko.ssh_exception.SSHException:
             self.mylog.info("命令执行失败:" + command)
