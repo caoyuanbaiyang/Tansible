@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import traceback
+
 from lib.readcfg import ReadCfg
 from lib.Logger import logger
 import logging
@@ -10,7 +12,6 @@ import paramiko
 import os
 import re
 from lib.hosts import hosts
-
 
 now_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
 log_file = "syslog.log"
@@ -47,7 +48,7 @@ class Tansible(object):
             return True, []
 
     def __action_func_inner(self, hostname, modelname, param):
-        self.mylog.info("------模块:{mod},主机:{host}" .format(host=hostname, mod=modelname))
+        self.mylog.info("------模块:{mod},主机:{host}".format(host=hostname, mod=modelname))
         host = self.hosts["HOST"][hostname]
 
         Tools().packHost(self.hosts["PUBLIC"], host)
@@ -104,5 +105,34 @@ class Tansible(object):
                         self.mylog.info(f"主机列表：{hostname_list}")
                         continue
                     for hostname in hostname_list:
-                        self.__action_func_inner(hostname, modelname, param)
+                        try:
+                            self.__action_func_inner(hostname, modelname, param)
+                        except Exception as e:
+                            self.__except_deal(hostname, modelname, param)
         self.mylog.green('############所有任务完成############')
+
+    def __except_deal(self, hostname, modelname, param):
+        self.mylog.cri(f"主机{hostname}执行模块{modelname}任务失败！错误信息如下：")
+        self.mylog.cri(f"traceback.format_exc():{traceback.format_exc()}")
+        if "exception_deal" in self.action_cfg["PUBLIC"]:
+            # c continu,e exit,r rerun,q question
+            if self.action_cfg["PUBLIC"]["exception_deal"] not in ["c", "e", "r", "q"]:
+                print("公共参数exception_deal配置错误，配置c continu,e exit,r rerun,q question")
+                raise Exception("公共参数exception_deal配置错误，配置c continu,e exit,r rerun,q question")
+            exception_deal = self.action_cfg["PUBLIC"]["exception_deal"]
+        else:
+            exception_deal = "q"
+        if exception_deal == "q":
+            self.mylog.info("请选择异常处理：")
+            self.mylog.info("c: 忽略该错误，继续执行")
+            self.mylog.info("e: 终止程序")
+            self.mylog.info("r: 重试，")
+            exception_deal = input("请输入操作代码[c/e/r]：")
+        if exception_deal == "c":
+            self.mylog.info("选择c,忽略该错误，继续执行")
+        if exception_deal == "e":
+            self.mylog.info("选择e,终止程序")
+            raise
+        if exception_deal == "r":
+            self.mylog.info("选择r,重新执行任务")
+            self.__action_func_inner(hostname, modelname, param)
