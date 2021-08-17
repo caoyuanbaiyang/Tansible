@@ -122,7 +122,7 @@ class ModelClass(object):
             cfg_value["include"] = []
         includes = cfg_value["include"]
 
-        if cfg_key == "{HOME}":  # 无子目录
+        if cfg_key in ["{HOME}", "NO_DIR"]:  # 无子目录
             local_dir = local_home
         else:  # 有子目录
             local_dir = os.path.join(local_home, cfg_key)
