@@ -71,7 +71,7 @@ class Tansible(object):
                 m.ModelClass(self.mylog).action(ssh, hostname, param, host)
             ssh.close()
         else:
-            self.mylog.cri("连接失败")
+            self.mylog.cri("连接失败："+host["ip"])
 
     def action_func(self):
         # 检查hosts 配置是否有错误的，如果有错误，则不运行
@@ -89,13 +89,15 @@ class Tansible(object):
         if choise == "n":
             print("选择退出...")
             raise Exception("选择退出...")
-
+        ignore_list = []
         for action in self.action_cfg["ACTION"]:
             # 遍历hosts列表
             hostname_list, err_host_list = hostobj.get_host_name(action["hosts"])
             for task in action["tasks"]:
                 # 遍历task列表
+                taskname = None
                 if "name" in task:
+                    taskname = task["name"]
                     self.mylog.info('*********执行任务：{task}*********'.format(task=task["name"]))
                 # 模块信息
                 for modelname, param in task.items():
@@ -108,31 +110,33 @@ class Tansible(object):
                         try:
                             self.__action_func_inner(hostname, modelname, param)
                         except Exception as e:
-                            self.__except_deal(hostname, modelname, param)
+                            ignore_list = ignore_list + (self.__except_deal(hostname, modelname, param, taskname))
+        if ignore_list:
+            self.mylog.cri(f"忽略的任务：{ignore_list}")
         self.mylog.green('############所有任务完成############')
 
-    def __except_deal(self, hostname, modelname, param):
-        self.mylog.cri(f"主机{hostname}执行模块{modelname}任务失败！错误信息如下：")
+    def __except_deal(self, hostname, modelname, param, taskname=None):
+        ignore_list = []
         self.mylog.cri(f"traceback.format_exc():{traceback.format_exc()}")
         if "exception_deal" in self.action_cfg["PUBLIC"]:
-            # c continu,e exit,r rerun,q question
             if self.action_cfg["PUBLIC"]["exception_deal"] not in ["c", "e", "r", "q"]:
-                print("公共参数exception_deal配置错误，配置c continu,e exit,r rerun,q question")
-                raise Exception("公共参数exception_deal配置错误，配置c continu,e exit,r rerun,q question")
+                raise Exception("公共参数exception_deal配置错误")
             exception_deal = self.action_cfg["PUBLIC"]["exception_deal"]
         else:
             exception_deal = "q"
         if exception_deal == "q":
-            self.mylog.info("请选择异常处理：")
-            self.mylog.info("c: 忽略该错误，继续执行")
-            self.mylog.info("e: 终止程序")
-            self.mylog.info("r: 重试，")
+            print("请选择异常处理：")
+            print(f"c: 忽略该错误，继续执行")
+            print("e: 终止程序，程序将退出")
+            print(f"r: 重试")
             exception_deal = input("请输入操作代码[c/e/r]：")
         if exception_deal == "c":
             self.mylog.info("选择c,忽略该错误，继续执行")
+            ignore_list.append({"host": hostname, "model": modelname, "task": taskname})
         if exception_deal == "e":
             self.mylog.info("选择e,终止程序")
             raise
         if exception_deal == "r":
             self.mylog.info("选择r,重新执行任务")
             self.__action_func_inner(hostname, modelname, param)
+        return ignore_list

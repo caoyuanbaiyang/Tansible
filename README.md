@@ -76,6 +76,7 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
+  exception_deal: q #c continu,e exit,r rerun,q question
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
@@ -179,11 +180,11 @@ ACTION:
 可进行交互式操作，instr和input列表里面的个数必须一致，instr[0]的输入为input[0]
 *模块参数*
 ```yaml 
-      #命令参数，必须填写
+      # 命令参数，必须填写
       cmd: 'scp abd.tar 192.168.0.1:/dir'
-      #可选参数，交户输入前提示的信息
+      # 可选参数，交户输入前提示的信息
       instr: ['yes/no', 'password']
-      #可选参数，交互输入的参数
+      # 可选参数，交互输入的参数
       input: ['yes', '密码']
 ```
 ###### Tupload，上传模块
