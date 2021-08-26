@@ -95,6 +95,7 @@ class hosts(object):
 
         if len(rt_hostnames) == 0:
             err_hostnames.append(pattern)
+            self.mylog.cri(f"action 配置文件中hosts配置错误，hosts.yaml无相关配置：{pattern}")
         return rt_hostnames, err_hostnames
 
     def check_hostname(self, hostsnames):
