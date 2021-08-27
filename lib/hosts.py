@@ -5,6 +5,16 @@
 # @File    : hosts.py.py
 # @Software: win10 python3
 import re
+from fnmatch import fnmatchcase as match
+
+
+def isContrainSpecialCharacter(string):
+    # fnmatch 支持的模糊匹配通配符
+    special_character = r"*?[]!"
+    for i in special_character:
+        if i in string:
+            return True
+    return False
 
 PATTERN_WITH_SUBSCRIPT = re.compile(
     r'''^
@@ -80,10 +90,17 @@ class hosts(object):
 
         # 不含[x:y]字符情况
         if not m:
-            if pattern in self.hosts["HOST"]:
-                rt_hostnames.append(pattern)
+            # 含正则表达式
+            if isContrainSpecialCharacter(pattern):
+                for hostname in list(self.hosts["HOST"].keys()):
+                    if match(hostname, pattern):
+                        rt_hostnames.append(hostname)
+            # 不含正则表达式
             else:
-                err_hostnames.append(pattern)
+                if pattern in self.hosts["HOST"]:
+                    rt_hostnames.append(pattern)
+                else:
+                    err_hostnames.append(pattern)
         else:
             # 包含[x:y]字符情况
             (lable, start, sep, end) = m.groups()
