@@ -1,2 +1,2 @@
 paramiko==2.6.0
-PyYAML
+PyYAML==5.4.1

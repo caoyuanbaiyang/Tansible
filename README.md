@@ -76,11 +76,12 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
+  # 异常处理配置，不配置则默认为q, c 表示忽略错误继续执行，e表示推出，r表示重新执行，q表示询问
   exception_deal: q #c continu,e exit,r rerun,q question
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
-    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组
+    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组，hosts配置支持linux文件名的模糊匹配
     tasks:
       - name: 任务说明
         SysPwdModify:  # 调用的模块，下面的设置都是模块相关的设置       
@@ -90,14 +91,17 @@ ACTION:
 
 ##### 模块说明
 ###### GetHostList, 获取主机列表
+通过该模块可以获取配置的hosts的具体的主机名，比如在hsots配置了组、模糊主机名、lable[x:y]的，可以通过该模块先确认主机列表
 *模块参数*
 
         # 无
 ###### CheckConnect, 检查SSH连接
+通过该模块可以检查配置hosts的连通性
 *模块参数*
 
         # 无
 ###### CheckHostname, 检查hosts.yaml与实际主机名
+通过该模块可以检查配置hosts中的主机名与实际服务器的主机名是否一致
 *模块参数*
 
         # 无
