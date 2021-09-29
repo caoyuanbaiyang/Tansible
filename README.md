@@ -159,7 +159,7 @@ ACTION:
     # 该模块提供下载，上传功能        
     # action 提供download,upload选项，分别为下载，上传
       local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
-      conf: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
+      conf: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
         remote_dir: /home/xx/ #远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
                               # $USER表示host.yaml中的username
                               # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
