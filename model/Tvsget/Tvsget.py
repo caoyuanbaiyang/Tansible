@@ -117,7 +117,7 @@ class ModelClass(object):
         else:
             self.bigcontent = cfg_value["bigcontent"]
 
-        if cfg_key == "{HOME}":  # 无子目录
+        if cfg_key in ["{HOME}", "NO_DIR"]:  # 无子目录
             local_dir = local_home
         else:           # 有子目录
             local_dir = os.path.join(local_home, cfg_key)
