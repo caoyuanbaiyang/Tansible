@@ -3,8 +3,8 @@
 block_cipher = None
 
 
-a = Analysis(['E:\\PyCharmProject\\Tansible\\main.py'],
-             pathex=['C:\\Users\\hp\\AppData\\Local\\Programs\\Python\\Python37\\Lib', 'C:\\Users\\hp\\AppData\\Local\\Programs\\Python\\Python37\\libs', 'E:\\PyCharmProject\\Tansible\\venv\\Lib\\site-packages', 'E:\\PyCharmProject\\程序发布\\Tansible', 'E:\\PyCharmProject\\Tansible'],
+a = Analysis(['main.py'],
+             pathex=['.venv\\Lib\\site-packages'],
              binaries=[],
              datas=[],
              hiddenimports=['model.CheckHostname.CheckHostname', 'model.DbPwdModify.DbPwdModify', 'model.DbPwdModifys.DbPwdModifys', 'model.Tsftp.Tsftp', 'model.Tshell.Tshell', 'model.Tsupershell.Tsupershell', 'model.Tupload.Tupload', 'model.Tvsget.Tvsget', 'model.Tvsget1.Tvsget1', 'model.SysPwdModify.SysPwdModify'],
