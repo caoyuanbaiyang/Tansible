@@ -8,15 +8,15 @@ class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
-    def checkhostname(self, ssh, hostname, stdinfo, timeout=3):
-        result = self.execcommand(ssh, "hostname", stdinfo, timeout=timeout)
+    def checkhostname(self, ssh, hostname, cmd):
+        result = self.execcommand(ssh, cmd)
         cmdhostname = result[1].split("\n")[-2].strip()
         if cmdhostname == hostname:
             return True, cmdhostname
         else:
             return False, cmdhostname
 
-    def execcommand(self, ssh, command, stdinfo=None, timeout=5):
+    def execcommand(self, ssh, command, stdinfo=None, timeout=3):
         if stdinfo is None:
             stdinfo = []
         try:
@@ -51,10 +51,10 @@ class ModelClass(object):
         return [True, out]
 
     def action(self, ssh, hostname, param, hostparam=None):
-        if hostparam is None:
-            hostparam = []
-        stdinfo = []
-        rz, cmdhostname = self.checkhostname(ssh, hostname, stdinfo)
+
+        if param is None or "cmd" not in param.keys():
+            param = {"cmd": "hostname"}
+        rz, cmdhostname = self.checkhostname(ssh, hostname, param["cmd"])
         if rz:
             self.mylog.info("主机名检查--成功")
         else:

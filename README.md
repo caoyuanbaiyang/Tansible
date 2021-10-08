@@ -76,12 +76,12 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
-  # 异常处理配置，不配置则默认为q, c 表示忽略错误继续执行，e表示推出，r表示重新执行，q表示询问
-  exception_deal: q #c continu,e exit,r rerun,q question
+  # exception_deal 异常处理参数，c continu,e exit,r rerun,q question
+  exception_deal: q 
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
-    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组，hosts配置支持linux文件名的模糊匹配
+    # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组
     tasks:
       - name: 任务说明
         SysPwdModify:  # 调用的模块，下面的设置都是模块相关的设置       
@@ -91,20 +91,21 @@ ACTION:
 
 ##### 模块说明
 ###### GetHostList, 获取主机列表
-通过该模块可以获取配置的hosts的具体的主机名，比如在hsots配置了组、模糊主机名、lable[x:y]的，可以通过该模块先确认主机列表
 *模块参数*
 
         # 无
 ###### CheckConnect, 检查SSH连接
-通过该模块可以检查配置hosts的连通性
 *模块参数*
 
         # 无
 ###### CheckHostname, 检查hosts.yaml与实际主机名
-通过该模块可以检查配置hosts中的主机名与实际服务器的主机名是否一致
 *模块参数*
 
-        # 无
+```yaml
+      # 运程执行命令获取主机名
+      # cmd 为可选参数，当hosts.yaml中配置的主机名与hostname命令结果不一致时，可利用cmd来调整
+      cmd: 'hostname-$USER'
+```
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
 
@@ -146,15 +147,19 @@ ACTION:
 ```yaml
     # 该模块提供系统用户密码修改功能，current_pwd_file优先级大于current_pwd,
     # new_pwd_file优先级大于new_pwd
-      current_pwd: 当前密码   # 所有主机的当前密码一样
-      new_pwd: 新密码        # 所有主机的新密码一样
-      current_pwd_file:  current_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存当前密码
-      new_pwd_file:  new_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存新密码
-      # action 方式
-      #   checkcur 检查当前密码
-      #   checknew 检查新密码
-      #   modify 改密码
-      action: checkpwd
+    # current_pwd 所有主机的当前密码一样时进行配置
+    current_pwd: 当前密码   
+    # new_pwd所有主机的新密码一样
+    new_pwd: 新密码        
+    # 当每个主机的密码不一样时，采用yaml文件保存当前密码
+    current_pwd_file:  current_pwd_file.yaml 
+    # 当每个主机的密码不一样时，采用yaml文件保存新密码
+    new_pwd_file:  new_pwd_file.yaml 
+    # action 方式
+    #   checkcur 检查当前密码
+    #   checknew 检查新密码
+    #   modify 改密码
+    action: checkcur
 ```
 ###### Tsftp，上传下载模块
 *模块参数*
@@ -163,7 +168,7 @@ ACTION:
     # 该模块提供下载，上传功能        
     # action 提供download,upload选项，分别为下载，上传
       local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
-      conf: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
+      conf: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
         remote_dir: /home/xx/ #远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
                               # $USER表示host.yaml中的username
                               # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
@@ -207,7 +212,7 @@ ACTION:
 ```yaml
     # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
       local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
-      mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
+      mntrad: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
         remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
         exclude: [不下载的文件在这里] # 可选参数
         md5filter: 30000  # 文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
@@ -219,7 +224,7 @@ ACTION:
 ```yaml
     # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
       local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
-      mntrad: # 子文件夹名称，如果设置为{HOME}则表示不建子文件夹
+      mntrad: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
         remote_dir: /home/sgeapp/ #远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
         exclude: [不下载的文件在这里] # 可选参数
         md5filter: 30000   # 文件大于该值则不下载文件而是获取文件的md5码
