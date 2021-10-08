@@ -76,7 +76,8 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
-  exception_deal: q #c continu,e exit,r rerun,q question
+  # exception_deal 异常处理参数，c continu,e exit,r rerun,q question
+  exception_deal: q 
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
@@ -100,7 +101,11 @@ ACTION:
 ###### CheckHostname, 检查hosts.yaml与实际主机名
 *模块参数*
 
-        # 无
+```yaml
+      # 运程执行命令获取主机名
+      # cmd 为可选参数，当hosts.yaml中配置的主机名与hostname命令结果不一致时，可利用cmd来调整
+      cmd: 'hostname-$USER'
+```
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
 
@@ -142,15 +147,19 @@ ACTION:
 ```yaml
     # 该模块提供系统用户密码修改功能，current_pwd_file优先级大于current_pwd,
     # new_pwd_file优先级大于new_pwd
-      current_pwd: 当前密码   # 所有主机的当前密码一样
-      new_pwd: 新密码        # 所有主机的新密码一样
-      current_pwd_file:  current_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存当前密码
-      new_pwd_file:  new_pwd_file.yaml #当每个主机的密码不一样时，采用文件保存新密码
-      # action 方式
-      #   checkcur 检查当前密码
-      #   checknew 检查新密码
-      #   modify 改密码
-      action: checkpwd
+    # current_pwd 所有主机的当前密码一样时进行配置
+    current_pwd: 当前密码   
+    # new_pwd所有主机的新密码一样
+    new_pwd: 新密码        
+    # 当每个主机的密码不一样时，采用yaml文件保存当前密码
+    current_pwd_file:  current_pwd_file.yaml 
+    # 当每个主机的密码不一样时，采用yaml文件保存新密码
+    new_pwd_file:  new_pwd_file.yaml 
+    # action 方式
+    #   checkcur 检查当前密码
+    #   checknew 检查新密码
+    #   modify 改密码
+    action: checkcur
 ```
 ###### Tsftp，上传下载模块
 *模块参数*
