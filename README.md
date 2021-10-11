@@ -168,13 +168,17 @@ ACTION:
     # 该模块提供下载，上传功能        
     # action 提供download,upload选项，分别为下载，上传
       local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
-      conf: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-        remote_dir: /home/xx/ #远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
-                              # $USER表示host.yaml中的username
-                              # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
-                              # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
-        include: [yy, zz]  # 可选参数，该参数只对下载有用，只有在remote_dir 为文件夹（以/结尾）时，才支持include设置,否则无效
-        exclude: [logs, log, csdklog, '*log', nohup.out] # 可选参数，该参数只对下载有用
+      # conf 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+      conf:
+        #remote_dir 远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
+        # $USER表示host.yaml中的username,$HOSTNAME表示host.yaml中的主机名
+        # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
+        # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
+        remote_dir: /home/xx/ 
+        # include可选参数，该参数只对下载有用，只有在remote_dir 为文件夹（以/结尾）时，才支持include设置,否则无效   
+        include: [yy, zz]  
+        # 可选参数，该参数只对下载有用
+        exclude: [logs, log, csdklog, '*log', nohup.out] 
       action: download 
 ```
 ###### Tshell，远程执行命令模块
@@ -210,13 +214,18 @@ ACTION:
 *模块参数*
 
 ```yaml
-    # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
+      # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
       local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
-      mntrad: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-        remote_dir: /home/xx/ #远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
-        exclude: [不下载的文件在这里] # 可选参数
-        md5filter: 30000  # 文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
-        bigcontent:  size # 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
+      # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+      mntrad: 
+        # remote_dir 远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
+        remote_dir: /home/xx/ 
+        # exclude 可选参数
+        exclude: [不下载的文件在这里] 
+        # md5filter文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
+        md5filter: 30000  
+        # bigcontent 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
+        bigcontent:  size 
 ```
 ###### Tvsget1，版本下载模块，大文件获取MD5码
 *模块参数*
@@ -224,10 +233,14 @@ ACTION:
 ```yaml
     # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
       local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
-      mntrad: # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-        remote_dir: /home/sgeapp/ #远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
-        exclude: [不下载的文件在这里] # 可选参数
-        md5filter: 30000   # 文件大于该值则不下载文件而是获取文件的md5码
+      # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+      mntrad: 
+        # remote_dir 远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
+        remote_dir: /home/sgeapp/ 
+        # exclude 可选参数
+        exclude: [不下载的文件在这里] 
+        # md5filter 文件大于该值则不下载文件而是获取文件的md5码
+        md5filter: 30000   
 ```
 
 
