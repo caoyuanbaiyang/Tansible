@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['main.py'],
-             pathex=['.venv\\Lib\\site-packages'],
+             pathex=['venv\\Lib\\site-packages'],
              binaries=[],
              datas=[],
              hiddenimports=['model.CheckHostname.CheckHostname', 'model.DbPwdModify.DbPwdModify', 'model.DbPwdModifys.DbPwdModifys', 'model.Tsftp.Tsftp', 'model.Tshell.Tshell', 'model.Tsupershell.Tsupershell', 'model.Tupload.Tupload', 'model.Tvsget.Tvsget', 'model.Tvsget1.Tvsget1', 'model.SysPwdModify.SysPwdModify'],
