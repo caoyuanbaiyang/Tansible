@@ -61,7 +61,7 @@ HOST:
 ```
 
 #### group.yaml文件配置说明
-对同类机器进行创建群组，方便后面的action文件调用
+对同类机器进行创建群组，方便后面的action文件调用，组分为简单组和嵌套组，简单组下面为具体的主机名，嵌套组下面还可以包含其它的组
 
 ```yaml
 # 简单组
@@ -74,7 +74,7 @@ group2:
   - host4
 # 嵌套组
 apart:
- # 嵌套组，则组下面必须为字典类型，且Key必须为children，且组只能嵌套一层
+  # 嵌套组，则组下面必须为字典类型，且Key必须为children，children下面必须为简单组
   children:
     - group1
     - group2
