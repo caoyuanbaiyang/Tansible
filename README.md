@@ -22,7 +22,15 @@ python paramiko
 4.  建议创建指定bat文件，关联action文件，以方便执行相关任务
 
 #### hosts.yaml文件配置说明
-该文件的配置信息主要用于连接远程机器用，如IP,用户名，密码或秘钥文件等信息。
+该文件的配置信息主要用于连接远程机器用，如主机名、IP、用户名，密码或秘钥文件等信息，目前支持的配置信息如下。
+
+- key_filename：秘钥文件
+- passphrase：秘钥文件的密码，如果秘钥文件没有密码则可配置为空或任意字符
+- connet_type：连接远程主机的方式，1为使用用户名密码连接，2为使用用户名秘钥文件连接
+- username：用户名
+- password：密码
+- 主机名：一般配置为主机名，如果有多用户，则配置为主机名-用户名
+
 ```yaml
 PUBLIC:
     #公共参数部分,如果HOST部分有相关配置，则优先使用HOST的配置
@@ -37,7 +45,7 @@ PUBLIC:
     # 密码
     password: password
 HOST:
-  #  
+  #  一般配置为主机名，如果有多用户则配置为主机名-用户名
   host1:
     ip: 127.0.1.131
   host2:
@@ -53,19 +61,20 @@ HOST:
 ```
 
 #### group.yaml文件配置说明
-对同类机器进行创建群组，方便维护
+对同类机器进行创建群组，方便后面的action文件调用
 
 ```yaml
+# 简单组
 group1:
   - host1
   - host2
-
+# 简单组，组下面的主机名可以支持lable[x:y]范围设定及fnmatch.fnmatchcase的linux类文件名模糊匹配 
 group2:
   - host3
   - host4
-
-
+# 嵌套组
 apart:
+ # 嵌套组，则组下面必须为字典类型，且Key必须为children，且组只能嵌套一层
   children:
     - group1
     - group2
@@ -76,11 +85,11 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
-  # exception_deal 异常处理参数，c continu,e exit,r rerun,q question
+  # exception_deal 异常处理参数，c continu 表示忽略错误，继续执行，程序最后会打印忽略列表,e exit 表示退出Tansible程序,r rerun 表示重新执行该任务,q question 表示询问
   exception_deal: q 
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2]  
-    # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定，
+    # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定及fnmatch.fnmatchcase的linux类文件名模糊匹配，
     # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组
     tasks:
       - name: 任务说明
@@ -104,7 +113,7 @@ ACTION:
 ```yaml
       # 运程执行命令获取主机名
       # cmd 为可选参数，当hosts.yaml中配置的主机名与hostname命令结果不一致时，可利用cmd来调整
-      cmd: 'hostname-$USER'
+      cmd: 'echo $(hostname)-$USER'
 ```
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
