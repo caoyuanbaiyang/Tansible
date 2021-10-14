@@ -58,6 +58,12 @@ HOST:
   host4:
     ip: 192.168.128.141
     connet_type: 1
+  zbx-a:
+    ip: 192.168.128.141
+    connet_type: 1
+  zbx-b:
+    ip: 192.168.128.141
+    connet_type: 1
 ```
 
 #### groups.yaml文件配置说明
@@ -70,8 +76,8 @@ group1:
   - host2
 # 简单组，组下面的主机名可以支持lable[x:y]范围设定及fnmatch.fnmatchcase的linux类文件名模糊匹配 
 group2:
-  - host3
-  - host4
+  - host[3:4]
+  - zbx*
 # 嵌套组
 apart:
   # 嵌套组，则组下面必须为字典类型，且Key必须为children，children下面必须为简单组
@@ -88,7 +94,7 @@ PUBLIC:
   # exception_deal 异常处理参数，c continu 表示忽略错误，继续执行，程序最后会打印忽略列表,e exit 表示退出Tansible程序,r rerun 表示重新执行该任务,q question 表示询问
   exception_deal: q 
 ACTION:
-  - hosts: [Simutransaction1, Simutransaction2]  
+  - hosts: [Simutransaction1, Simutransaction2,'macs[1:16]', 'tra*']  
     # hosts: ALL 表示对hosts.yaml中所有主机执行任务，支持lable[x:y]范围设定及fnmatch.fnmatchcase的linux类文件名模糊匹配，
     # 如MACS[1:16]表示MACS1、MACS2、MACS3...一直到MACS16的主机，也可配置为group.yaml中的组
     tasks:
