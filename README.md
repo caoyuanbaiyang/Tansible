@@ -91,7 +91,9 @@ apart:
 PUBLIC:
   # 公共设置部分
   公共参数key: 公共参数value
-  # exception_deal 异常处理参数，c continu 表示忽略错误，继续执行，程序最后会打印忽略列表,e exit 表示退出Tansible程序,r rerun 表示重新执行该任务,q question 表示询问, 如果未配置exception_deal参数，则Tansible程序以q question的方式每次遇到异常时进行询问
+  # exception_deal 异常处理参数，c continu 表示忽略错误，继续执行，程序最后会打印忽略列表,e exit 表示退出Tansible程序,
+  # r rerun 表示重新执行该任务,q question 表示询问, 如果未配置exception_deal参数，则Tansible程序以
+  # q question的方式每次遇到异常时进行询问
   exception_deal: q 
 ACTION:
   - hosts: [Simutransaction1, Simutransaction2,'macs[1:16]', 'tra*']  
