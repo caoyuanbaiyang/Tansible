@@ -210,7 +210,7 @@ conf:
     include: [yy, zz]  
     # 可选参数，该参数只对下载有用
     exclude: [logs, log, csdklog, '*log', nohup.out] 
- action: download 
+action: download 
  例1：下载服务器上的/home/xx/ 到默认下载目录中
  Tsftp:
    NO_DIR:
