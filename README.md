@@ -154,17 +154,17 @@ DbPwdModify:
 # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
 # 下载到download\dbpwdmodify 目录下
 # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
-例1：
+# cfg_file 具体配置服务器上密码配置文件的路径和文件名
+# instr 用于查找行，并对instr字符后面的内容用新的密码进行替换
+# pwd 设置新密码
+例1：下载并转换服务器中 /home/xx/mntrad/application-jdbc.properties到download\dbpwdmodify\主机名\mntrad目录下，下载并转换服务器中 /home/xx/quote/application-jdbc.properties到download\dbpwdmodify\主机名\quote目录下
 DbPwdModifys:
-    mntrad:
-        # cfg_file 具体配置服务器上密码配置文件的路径和文件名
-        cfg_file: /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties
-        # instr 用于查找行，并对instr字符后面的内容用新的密码进行替换
-        instr: 'spring.datasource.password='
-        # pwd 设置新密码
+    mntrad:       
+        cfg_file: /home/xx/mntrad/application-jdbc.properties       
+        instr: 'spring.datasource.password='        
         pwd: BlowFish
     quote:
-        cfg_file: /home/xx/yy/webapps/quote/WEB-INF/conf/application-jdbc.properties
+        cfg_file: /home/xx/quote/application-jdbc.properties
         instr: 'spring.datasource.password='
         pwd: BlowFish
     action:
