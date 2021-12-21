@@ -110,154 +110,193 @@ ACTION:
 ###### GetHostList, 获取主机列表
 *模块参数*
 
-        # 无
+    # 无
+    例：
+    GetHostList:
 ###### CheckConnect, 检查SSH连接
 *模块参数*
 
-        # 无
+    # 无
+    例：
+    CheckConnect:
 ###### CheckHostname, 检查hosts.yaml与实际主机名
 *模块参数*
 
 ```yaml
-      # 运程执行命令获取主机名
-      # cmd 为可选参数，当hosts.yaml中配置的主机名与hostname命令结果不一致时，可利用cmd来调整
-      cmd: 'echo $(hostname)-$USER'
+# 运程执行命令获取主机名
+# cmd 为可选参数，当hosts.yaml中配置的主机名与hostname命令结果不一致时，可利用cmd来调整
+例1：
+CheckHostname:
+例2：
+CheckHostname:
+  cmd: 'echo $(hostname)-$USER'
 ```
 ###### DbPwdModify，数据库密码配置文件调整，单个文件
 *模块参数*
 
 ```yaml
-    # 该模块提供单个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
-    # 下载到download\dbpwdmodify 目录下
-    # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
-      cfg_file : /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
-      instr: 'spring.datasource.password=' 
-      pwd: BlowFish
-      action:
-        - DOWNLOAD
+# 该模块提供单个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
+# 下载到download\dbpwdmodify 目录下
+# action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
+例1：
+DbPwdModify:
+   cfg_file : /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
+   instr: 'spring.datasource.password=' 
+   pwd: BlowFish
+   action:
+     - DOWNLOAD
 ```
 
 ###### DbPwdModifys，数据库密码配置文件调整，多个文件
 *模块参数*
 
 ```yaml
-    # 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
-    # 下载到download\dbpwdmodify 目录下
-    # action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
-      mntrad:
+# 该模块提供多个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
+# 下载到download\dbpwdmodify 目录下
+# action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
+例1：
+DbPwdModifys:
+    mntrad:
         # cfg_file 具体配置服务器上密码配置文件的路径和文件名
         cfg_file: /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties
         # instr 用于查找行，并对instr字符后面的内容用新的密码进行替换
         instr: 'spring.datasource.password='
         # pwd 设置新密码
         pwd: BlowFish
-      quote:
+    quote:
         cfg_file: /home/xx/yy/webapps/quote/WEB-INF/conf/application-jdbc.properties
         instr: 'spring.datasource.password='
         pwd: BlowFish
-      action:
+    action:
         - DOWNLOAD
 ```
 ###### SysPwdModify，系统用户密码调整
 *模块参数*
 
 ```yaml
-    # 该模块提供系统用户密码修改功能，current_pwd_file优先级大于current_pwd,
-    # new_pwd_file优先级大于new_pwd
-    # current_pwd 所有主机的当前密码一样时进行配置
-    current_pwd: 当前密码   
-    # new_pwd所有主机的新密码一样
-    new_pwd: 新密码        
-    # 当每个主机的密码不一样时，采用yaml文件保存当前密码
-    current_pwd_file:  current_pwd_file.yaml 
-    # 当每个主机的密码不一样时，采用yaml文件保存新密码
-    new_pwd_file:  new_pwd_file.yaml 
-    # action 方式
+# 该模块提供系统用户密码修改功能，current_pwd_file优先级大于current_pwd,
+# new_pwd_file优先级大于new_pwd
+# current_pwd 所有主机的当前密码一样时进行配置
+# action 方式
     #   checkcur 检查当前密码
     #   checknew 检查新密码
     #   modify 改密码
+例1：当前密码统一，新密码统一，检查当前密码
+SysPwdModify:
+    current_pwd: 当前密码   
+    new_pwd: 新密码        
     action: checkcur
+例2：当前密码不统一，新密码不统一，修改密码
+SysPwdModify:
+    current_pwd_file: current_pwd_file.yaml   
+    new_pwd_file: new_pwd_file.yaml        
+    action: modify    
 ```
 ###### Tsftp，上传下载模块
 *模块参数*
 
 ```yaml
-    # 该模块提供下载，上传功能        
-    # action 提供download,upload选项，分别为下载，上传
-      local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
-      # conf 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-      conf:
-        #remote_dir 远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
-        # $USER表示host.yaml中的username,$HOSTNAME表示host.yaml中的主机名
-        # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
-        # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
-        remote_dir: /home/xx/ 
-        # include可选参数，该参数只对下载有用，只有在remote_dir 为文件夹（以/结尾）时，才支持include设置,否则无效   
-        include: [yy, zz]  
-        # 可选参数，该参数只对下载有用
-        exclude: [logs, log, csdklog, '*log', nohup.out] 
-      action: download 
+# 该模块提供下载，上传功能        
+# action 提供download,upload选项，分别为下载，上传
+local_dir: 可选参数，本地存放路径，如果不设置则默认下载到download\Tsftp 目录下
+# conf 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+conf:
+    #remote_dir 远程路径 ，文件夹的以/结尾，下载模式支持*模糊匹配,$HOME表示/home/用户名，注意目录的配置需要以/结尾
+    # $USER表示host.yaml中的username,$HOSTNAME表示host.yaml中的主机名
+    # 上传时将download\Tsftp\主机名\子文件夹\ 下面的文件上传到remote_dir
+    # 设置的文件夹中，如果remote_dir中是文件格式，则去掉最后文件名只取目录
+    remote_dir: /home/xx/ 
+    # include可选参数，该参数只对下载有用，只有在remote_dir 为文件夹（以/结尾）时，才支持include设置,否则无效   
+    include: [yy, zz]  
+    # 可选参数，该参数只对下载有用
+    exclude: [logs, log, csdklog, '*log', nohup.out] 
+ action: download 
+ 例1：下载服务器上的/home/xx/ 到默认下载目录中
+ Tsftp:
+   NO_DIR:
+      remote_dir: /home/xx/ 
+   action: download
+ 例1：上传本地路径download\Tsftp\主机名\ 到主机服务器上的/home/xx/目录
+ Tsftp:
+   NO_DIR:
+      remote_dir: /home/xx/ 
+   action: upload      
 ```
 ###### Tshell，远程执行命令模块
 *模块参数*
 
 ```yaml
-      # 该模块提供运程执行命令的功能
-      cmd: 'hostname'
+# 该模块提供运程执行命令的功能
+cmd: 'hostname'
+例1：查看主机名
+Tshell:
+  cmd: hostname
 ```
 
 ###### Tsupershell，远程执行命令模块
 可进行交互式操作，instr和input列表里面的个数必须一致，instr[0]的输入为input[0]
 *模块参数*
 ```yaml 
-      # 命令参数，必须填写
-      cmd: 'scp abd.tar 192.168.0.1:/dir'
-      # 可选参数，交户输入前提示的信息
-      instr: ['yes/no', 'password']
-      # 可选参数，交互输入的参数
-      input: ['yes', '密码']
+# 命令参数，必须填写
+cmd: 'scp abd.tar 192.168.0.1:/dir'
+# 可选参数，交户输入前提示的信息
+instr: ['yes/no', 'password']
+# 可选参数，交互输入的参数
+input: ['yes', '密码']
+例1：scp 主机中/abd.tar 文件到 192.168.0.1:/dir 中
+Tsupershell:
+    cmd: 'scp abd.tar 192.168.0.1:/dir'
+    instr: ['yes/no', 'password']
+    input: ['yes', '密码']
+
 ```
 ###### Tupload，上传模块
 *模块参数*
 
 ```yaml
-      # 该模块提供上传文件的功能
-      simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
-      source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
-      dest_dir: /root/upload/  #上传目的路径,$HOME表示/home/用户名,$USER表示用户名（host.yaml中的username）,注意目录需要以/结束，如果需要上传多个路径可以用[路径1,路径2，路径3]的形式
-      exclude: [start.sh]      #不上传的文件及文件夹列表
+# 该模块提供上传文件的功能
+simple_type: 1 # 0  source_dir下根据主机名文件夹上传， 1 直接source_dir
+source_dir: E:/PyCharmProject/Tansible/download/Tsftp/MACS1/  #目录以linux格式设置
+dest_dir: /root/upload/  #上传目的路径,$HOME表示/home/用户名,$USER表示用户名（host.yaml中的username）,注意目录需要以/结束，如果需要上传多个路径可以用[路径1,路径2，路径3]的形式
+exclude: [start.sh]      #不上传的文件及文件夹列表
+
+例1：将package目录下的文件上传到/root/upload/目录中
+Tupload:
+    simple_type: 1 
+    source_dir: package
+    dest_dir: /root/upload/
 ```
 ###### Tvsget，版本下载模块，大文件获取size，mtime，st_mode
 *模块参数*
 
 ```yaml
-      # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
-      local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
-      # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-      mntrad: 
-        # remote_dir 远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
-        remote_dir: /home/xx/ 
-        # exclude 可选参数
-        exclude: [不下载的文件在这里] 
-        # md5filter文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
-        md5filter: 30000  
-        # bigcontent 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
-        bigcontent:  size 
+# 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
+local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
+# 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+mntrad: 
+    # remote_dir 远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
+    remote_dir: /home/xx/ 
+    # exclude 可选参数
+    exclude: [不下载的文件在这里] 
+    # md5filter文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
+    md5filter: 30000  
+    # bigcontent 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
+    bigcontent:  size 
 ```
 ###### Tvsget1，版本下载模块，大文件获取MD5码
 *模块参数*
 
 ```yaml
-    # 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
-      local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
-      # 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-      mntrad: 
-        # remote_dir 远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
-        remote_dir: /home/sgeapp/ 
-        # exclude 可选参数
-        exclude: [不下载的文件在这里] 
-        # md5filter 文件大于该值则不下载文件而是获取文件的md5码
-        md5filter: 30000   
+# 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的md5码，而不下载文件
+local_dir: 可选参数,本地存放路径，如果不设置则默认下载到download\Tvsget1 目录下
+# 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
+mntrad: 
+    # remote_dir 远程下载路径 ，文件夹必须以“/”结尾，支持*模糊匹配
+    remote_dir: /home/sgeapp/ 
+    # exclude 可选参数
+    exclude: [不下载的文件在这里] 
+    # md5filter 文件大于该值则不下载文件而是获取文件的md5码
+    md5filter: 30000   
 ```
 
 
