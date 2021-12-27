@@ -26,7 +26,7 @@ python paramiko
 
 - key_filename：秘钥文件
 - passphrase：秘钥文件的密码，如果秘钥文件没有密码则可配置为空或任意字符
-- connet_type：连接远程主机的方式，1为使用用户名密码连接，2为使用用户名秘钥文件连接
+- connect_type：连接远程主机的方式，1为使用用户名密码连接，2为使用用户名秘钥文件连接
 - username：用户名
 - password：密码
 - 主机名：一般配置为主机名，如果有多用户，则配置为主机名-用户名
@@ -39,7 +39,7 @@ PUBLIC:
     # 秘钥文件密码
     passphrase: 123
     # 连接方式 1 表示采用密码的方式，2 表示采用秘钥文件的方式
-    connet_type: 2  # 1 password  2 rsa
+    connect_type: 2  # 1 password  2 rsa
     # 用户名
     username: root
     # 密码
