@@ -55,7 +55,7 @@ class Tansible(object):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        if host["connet_type"] == 1:
+        if host["connect_type"] == 1:
             # 用户名密码 登录
             connect = Tools().connectWithPWD(ssh, host["ip"], host["username"], host["password"])
         else:
