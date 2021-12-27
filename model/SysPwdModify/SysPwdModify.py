@@ -20,12 +20,11 @@ class ModelClass(object):
     def __init__(self, mylog):
         self.mylog = mylog
 
-    def shellCommand(self, ssh, command, stdinfo, timeout=5):
-
-        chanel = ssh.invoke_shell()
-        chanel.send("export LANG=en_US.UTF-8 \n")
+    def shellCommand(self, ssh, command, stdinfo, timeout=10):
+        channel = ssh.invoke_shell()
+        channel.send("export LANG=en_US.UTF-8 \n")
         time.sleep(0.01)
-        chanel.send(command + "\n")
+        channel.send(command + "\n")
         time.sleep(0.05)
 
         return_bool = True
@@ -35,7 +34,7 @@ class ModelClass(object):
         while not (buff.endswith("assword: ") or buff.endswith("密码：")):
             self.mylog.info("查找assword:...")
             time.sleep(0.1)
-            resp = chanel.recv(9999)
+            resp = channel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
             i = i + 1
@@ -44,22 +43,30 @@ class ModelClass(object):
 
         self.mylog.info("输入信息")
         for info in stdinfo:
-            chanel.send(info)
-            chanel.send("\n")
-            time.sleep(0.2)
+            while not channel.send_ready():
+                time.sleep(0.009)
+            channel.send(info)
+            channel.send("\n")
+            print(f"输入:{info}")
+            time.sleep(0.02)
 
         buff = ""
-        i = 0
+
         self.mylog.info("开始查找$ ")
         while not buff.endswith("$ "):
-            resp = chanel.recv(9999)
+            base_time = time.time()
+            while not channel.recv_ready():
+                print("sleep 0.9")
+                time.sleep(0.9)
+                if time.time() >= (base_time + timeout):
+                    return [False, "channel.recv_ready time out"]
+            print("channel.recv(2048)")
+            resp = channel.recv(2048)
             reply = ssh_reply(resp)
             buff += reply
+            print(buff)
             if "BAD PASSWORD" in buff:
                 return_bool = False
-                break
-            i = i + 1
-            while i > 50:
                 break
 
         self.mylog.info(buff)
