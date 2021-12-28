@@ -52,18 +52,18 @@ HOST:
     ip: 127.0.1.132
   host3:
     ip: 192.168.128.140
-    connet_type: 1
+    connect_type: 1
     username: root
     password: redhat123
   host4:
     ip: 192.168.128.141
-    connet_type: 1
+    connect_type: 1
   zbx-a:
     ip: 192.168.128.141
-    connet_type: 1
+    connect_type: 1
   zbx-b:
     ip: 192.168.128.141
-    connet_type: 1
+    connect_type: 1
 ```
 
 #### groups.yaml文件配置说明
