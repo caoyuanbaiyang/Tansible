@@ -211,13 +211,13 @@ conf:
     # 可选参数，该参数只对下载有用
     exclude: [logs, log, csdklog, '*log', nohup.out] 
 action: download 
- 例1：下载服务器上的/home/xx/ 到默认下载目录中
- Tsftp:
+例1：下载服务器上的/home/xx/ 到默认下载目录中
+Tsftp:
    NO_DIR:
       remote_dir: /home/xx/ 
    action: download
- 例1：上传本地路径download\Tsftp\主机名\ 到主机服务器上的/home/xx/目录
- Tsftp:
+例２：上传本地路径download\Tsftp\主机名\ 到主机服务器上的/home/xx/目录
+Tsftp:
    NO_DIR:
       remote_dir: /home/xx/ 
    action: upload      
