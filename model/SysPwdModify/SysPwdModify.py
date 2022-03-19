@@ -3,8 +3,8 @@ import os
 
 import chardet
 
-from lib.tools import Tools
-import paramiko
+# from lib.tools import Tools
+# import paramiko
 import time
 import json
 from lib.readcfg import ReadCfg
@@ -30,9 +30,9 @@ class ModelClass(object):
         return_bool = True
         buff = ""
         i = 0
-        self.mylog.info("开始查找assword:")
+        self.mylog.debug("开始查找assword:")
         while not (buff.endswith("assword: ") or buff.endswith("密码：")):
-            self.mylog.info("查找assword:...")
+            self.mylog.debug("查找assword:...")
             time.sleep(0.1)
             resp = channel.recv(9999)
             reply = ssh_reply(resp)
@@ -41,35 +41,35 @@ class ModelClass(object):
             while i > 50:
                 break
 
-        self.mylog.info("输入信息")
+        self.mylog.debug("输入信息")
         for info in stdinfo:
             while not channel.send_ready():
                 time.sleep(0.009)
             channel.send(info)
             channel.send("\n")
-            print(f"输入:{info}")
-            time.sleep(0.02)
+            self.mylog.debug(f"输入:{info}")
+            time.sleep(0.2)
 
         buff = ""
 
-        self.mylog.info("开始查找$ ")
+        self.mylog.debug("开始查找$ ")
+        base_time = time.time()
         while not buff.endswith("$ "):
-            base_time = time.time()
             while not channel.recv_ready():
-                print("sleep 0.9")
+                self.mylog.debug("sleep 0.9")
                 time.sleep(0.9)
                 if time.time() >= (base_time + timeout):
-                    return [False, "channel.recv_ready time out"]
-            print("channel.recv(2048)")
-            resp = channel.recv(2048)
+                    return [True, f"channel.recv_ready time out, buff:{buff}"]
+            self.mylog.debug("channel.recv(9999)")
+            resp = channel.recv(9999)
             reply = ssh_reply(resp)
             buff += reply
-            print(buff)
+            self.mylog.debug(f"reply:{reply}")
             if "BAD PASSWORD" in buff:
                 return_bool = False
                 break
 
-        self.mylog.info(buff)
+        self.mylog.debug(f"buff:{buff}")
         return [return_bool, buff]
 
     def modifyNewPassword(self, hostname, ssh, password, newpassword):
@@ -77,6 +77,7 @@ class ModelClass(object):
         rs = self.shellCommand(ssh, "passwd", stdinfo)
 
         if type(rs[1]) == str:
+            self.mylog.debug(f"rs1内容：{rs[1]}")
             if "successfully" in rs[1] or "成功" in rs[1]:
                 self.mylog.info("修改密码：主机{}修改成功".format(hostname))
             elif "manipulation error" in rs[1]:
