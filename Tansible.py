@@ -22,7 +22,7 @@ action_file = "config/action.yaml"
 
 class Tansible(object):
     def __init__(self, filepath=None):
-        self.mylog = logger(log_file, logging.INFO, logging.INFO)
+        self.mylog = logger(log_file, logging.INFO, logging.DEBUG)
         self.hosts = ReadCfg().readcfg(hosts_file)
         if os.path.exists(groups_file):
             self.groups = ReadCfg().readcfg(groups_file)
