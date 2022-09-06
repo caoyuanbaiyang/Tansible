@@ -10,7 +10,7 @@ import importlib
 from lib.tools import Tools
 import paramiko
 import os
-import re
+from concurrent.futures import ThreadPoolExecutor
 from lib.hosts import hosts
 
 now_time = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
@@ -28,12 +28,18 @@ class Tansible(object):
             self.groups = ReadCfg().readcfg(groups_file)
         else:
             self.groups = []
+
         if filepath is None:
             self.action_cfg = ReadCfg().readcfg(action_file)
             self.cfgfilepath = action_file
         else:
             self.action_cfg = ReadCfg().readcfg(filepath)
             self.cfgfilepath = filepath
+
+        if "max_worker" in self.action_cfg["PUBLIC"]:
+            self.max_worker = self.action_cfg["PUBLIC"]["max_worker"]
+        else:
+            self.max_worker = 1
 
     def __check_acton_hostcfg(self, hostobj):
         hostnames = []
@@ -106,11 +112,14 @@ class Tansible(object):
                     if modelname == "GetHostList":
                         self.mylog.info(f"主机列表：{hostname_list}")
                         continue
-                    for hostname in hostname_list:
-                        try:
-                            self.__action_func_inner(hostname, modelname, param)
-                        except Exception as e:
-                            ignore_list = ignore_list + (self.__except_deal(hostname, modelname, param, taskname))
+                    with ThreadPoolExecutor(max_workers=self.max_worker) as t:
+                        obj_list = []
+                        for hostname in hostname_list:
+                            try:
+                                obj = t.submit(self.__action_func_inner, hostname, modelname, param)
+                                obj_list.append(obj)
+                            except Exception as e:
+                                ignore_list = ignore_list + (self.__except_deal(hostname, modelname, param, taskname))
         if ignore_list:
             self.mylog.cri(f"忽略的任务：{ignore_list}")
         self.mylog.green('############所有任务完成############')
