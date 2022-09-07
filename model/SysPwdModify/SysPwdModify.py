@@ -81,13 +81,13 @@ class ModelClass(object):
             if "successfully" in rs[1] or "成功" in rs[1]:
                 self.mylog.info("修改密码：主机{}修改成功".format(hostname))
             elif "manipulation error" in rs[1]:
-                self.mylog.error("修改密码：主机{}修改失败,当前密码错误".format(hostname))
+                self.mylog.error(f"修改密码：主机{hostname}修改失败,当前密码错误,{rs[1]}")
                 raise Exception("修改密码：主机{}修改失败,当前密码错误".format(hostname))
             elif "BAD PASSWORD" in rs[1]:
-                self.mylog.error("修改密码：主机{}修改失败,新密码不符合要求".format(hostname))
+                self.mylog.error(f"修改密码：主机{hostname}修改失败,新密码不符合要求,{rs[1]}")
                 raise Exception("修改密码：主机{}修改失败,新密码不符合要求".format(hostname))
             else:
-                self.mylog.error("修改密码：主机{}修改失败".format(hostname))
+                self.mylog.error(f"修改密码：主机{hostname}修改失败,{rs[1]}")
                 raise Exception("修改密码：主机{}修改失败".format(hostname))
 
     def checkwd(self, hostname, ssh, username, password):
@@ -97,7 +97,7 @@ class ModelClass(object):
             if "Last login" in rs[1] or "上一次登录" in rs[1]:
                 self.mylog.info("检查：主机{}登录检查成功".format(hostname))
             else:
-                self.mylog.error("检查：主机{}登录检查失败".format(hostname))
+                self.mylog.error(f"检查：主机{hostname}登录检查失败,{rs[1]}")
 
     def action(self, ssh, hostname, param, hostparam=None):
         if hostparam is None:
