@@ -77,7 +77,7 @@ class Tansible(object):
                 m.ModelClass(self.mylog).action(ssh, hostname, param, host)
             ssh.close()
         else:
-            self.mylog.cri("连接失败："+host["ip"])
+            self.mylog.cri(f"连接失败， 主机名：{hostname} IP：{host['ip']} 用户名：{host['username']}")
 
     def action_func(self):
         # 检查hosts 配置是否有错误的，如果有错误，则不运行
