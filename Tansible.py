@@ -36,10 +36,10 @@ class Tansible(object):
             self.action_cfg = ReadCfg().readcfg(filepath)
             self.cfgfilepath = filepath
 
-        if "max_worker" in self.action_cfg["PUBLIC"]:
-            self.max_worker = self.action_cfg["PUBLIC"]["max_worker"]
+        if "max_workers" in self.action_cfg["PUBLIC"]:
+            self.max_workers = self.action_cfg["PUBLIC"]["max_workers"]
         else:
-            self.max_worker = 1
+            self.max_workers = 1
 
     def __check_acton_hostcfg(self, hostobj):
         hostnames = []
@@ -112,7 +112,7 @@ class Tansible(object):
                     if modelname == "GetHostList":
                         self.mylog.info(f"主机列表：{hostname_list}")
                         continue
-                    with ThreadPoolExecutor(max_workers=self.max_worker) as t:
+                    with ThreadPoolExecutor(max_workers=self.max_workers) as t:
                         obj_list = []
                         for hostname in hostname_list:
                             try:
