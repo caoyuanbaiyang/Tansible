@@ -14,12 +14,13 @@ python paramiko
 
 #### 使用说明
 
-1.  config/hosts.yaml 文件中创建主机相关信息
-2.  config/groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
-3.  按需创建action文件，action.yaml是默认文件，文件名称可自定义
+1. config/hosts.yaml 文件中创建主机相关信息
+2. config/groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
+3. 按需创建action文件，action.yaml是默认文件，文件名称可自定义
     - cmd>Tansible.exe #运行的是action.yaml中的配置
     - cmd>Tansible.exe test.yaml #运行的是config/test.yaml 中的配置
-4.  建议创建指定bat文件，关联action文件，以方便执行相关任务
+4. 建议创建指定bat文件，关联action文件，以方便执行相关任务
+5. 单步运行模式增加 -s 选项如 cmd>Tansible.exe test.yaml -s 
 
 #### hosts.yaml文件配置说明
 该文件的配置信息主要用于连接远程机器用，如主机名、IP、用户名，密码或秘钥文件等信息，目前支持的配置信息如下。
