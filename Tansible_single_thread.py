@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+import sys
 import traceback
 
 from lib.readcfg import ReadCfg
@@ -73,7 +74,7 @@ class Tansible(object):
         else:
             self.mylog.cri(f"连接失败， 主机名：{hostname} IP：{host['ip']} 用户名：{host['username']}")
 
-    def action_func(self):
+    def action_func(self, single_step=False):
         # 检查hosts 配置是否有错误的，如果有错误，则不运行
         hostobj = hosts(self.mylog, self.groups, self.hosts)
         checkrz, rzlist = self.__check_acton_hostcfg(hostobj)
@@ -109,6 +110,14 @@ class Tansible(object):
                     for hostname in hostname_list:
                         try:
                             self.__action_func_inner(hostname, modelname, param)
+                            if single_step:
+                                choise = input("单步运行模式，此处暂停，如需继续请按y,退出请按q：")
+                                if choise not in ["y", "q"]:
+                                    print("输入错误")
+                                    raise Exception("输入错误")
+                                if choise == "q":
+                                    print("选择退出...")
+                                    sys.exit(0)
                         except Exception as e:
                             ignore_list = ignore_list + (self.__except_deal(hostname, modelname, param, taskname))
         if ignore_list:
