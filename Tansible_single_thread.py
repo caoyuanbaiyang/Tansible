@@ -107,6 +107,15 @@ class Tansible(object):
                     if modelname == "GetHostList":
                         self.mylog.info(f"主机列表：{hostname_list}")
                         continue
+                    if modelname == "Breakpoint":
+                        choise = input(f"断点{param['name']}，此处暂停，如需继续请按y,退出请按q：")
+                        if choise not in ["y", "q"]:
+                            print("输入错误")
+                            raise Exception("输入错误")
+                        if choise == "q":
+                            print("选择退出...")
+                            sys.exit(0)
+                        continue
                     for hostname in hostname_list:
                         try:
                             self.__action_func_inner(hostname, modelname, param)
