@@ -108,11 +108,11 @@ class Tansible(object):
                         self.mylog.info(f"主机列表：{hostname_list}")
                         continue
                     if modelname == "Breakpoint":
-                        choise = input(f"断点{param['name']}，此处暂停，如需继续请按y,退出请按q：")
-                        if choise not in ["y", "q"]:
+                        choice = input(f"断点{param['name']}，此处暂停，如需继续请按y，退出请按q：")
+                        if choice not in ["y", "q"]:
                             print("输入错误")
                             raise Exception("输入错误")
-                        if choise == "q":
+                        if choice == "q":
                             print("选择退出...")
                             sys.exit(0)
                         continue
@@ -120,13 +120,16 @@ class Tansible(object):
                         try:
                             self.__action_func_inner(hostname, modelname, param)
                             if single_step:
-                                choise = input("单步运行模式，此处暂停，如需继续请按y,退出请按q：")
-                                if choise not in ["y", "q"]:
+                                choice = input("单步运行模式，此处暂停，如需继续请按y，退出请按q，退出单步运行模式请按go：")
+                                if choice not in ["y", "q", "go"]:
                                     print("输入错误")
                                     raise Exception("输入错误")
-                                if choise == "q":
+                                if choice == "q":
                                     print("选择退出...")
                                     sys.exit(0)
+                                if choice == "go":
+                                    print("选择退出单步运行模式...")
+                                    single_step = False
                         except Exception as e:
                             ignore_list = ignore_list + (self.__except_deal(hostname, modelname, param, taskname))
         if ignore_list:
