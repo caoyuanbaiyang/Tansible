@@ -26,6 +26,7 @@ class ModelClass(object):
 
     def download_from_linux(self, local_dir, remote_dir, excludes=[], md5filter=0):
         err_list = []
+        # remote_dir 支持模糊匹配，目录配置必须以“/”结尾
         if not C.isContrainSpecialCharacter(remote_dir):
             if remote_dir.endswith("/"):
                 if not self.sftp_get_dir_exclude(local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
@@ -61,7 +62,7 @@ class ModelClass(object):
         (tmp_dir, filename) = os.path.split(remote_file)
         tmp_local_filename = os.path.join(local_dir, filename)
         filesize = self.conn._connect_sftp().stat(remote_file).st_size
-        if (filename in excludes or remote_file in excludes):
+        if filename in excludes or remote_file in excludes:
             self.mylog.debug('  跳过文件  {}'.format(remote_file))
             return True
         if filesize > md5filter:
@@ -76,7 +77,7 @@ class ModelClass(object):
             self.mylog.debug('  Get文件  %s 传输中...' % remote_file)
             self.mylog.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
             try:
-                self.conn._connect_sftp().get(remote_file, tmp_local_filename)
+                self.conn.fetch_file(remote_file, tmp_local_filename)
             except:
                 result = False
                 self.mylog.debug("Get文件 {file},{loc} 失败!".format(file=remote_file,
@@ -104,7 +105,6 @@ class ModelClass(object):
                 self.mylog.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
             else:
                 # 软连接文件
-                # if file.longname.startswith("l") and file.st_size > md5filter:
                 if stat.S_ISLNK(file.st_mode) and self.link == "target":
                     self.mylog.debug('  Get文件 %s 软连接 传输中...' % remote_path_filename)
                     try:
@@ -158,7 +158,7 @@ class ModelClass(object):
 
         for cfg_key, cfg_value in self.action_param.items():
             if cfg_key not in ["local_dir"]:
-                local_home = os.path.join(self.action_param["local_dir"], hostname)
+                local_home = os.path.join(self.action_param["local_dir"], self.hostname)
                 if not self.__acton_inner(local_home=local_home, cfg_key=cfg_key, cfg_value=cfg_value):
                     err_list.append(cfg_key)
 
