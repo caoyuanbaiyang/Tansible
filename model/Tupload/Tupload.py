@@ -2,9 +2,7 @@
 
 import json
 import os
-from pathlib import Path
 
-import lib.constants as C
 
 
 class ModelClass(object):
@@ -14,35 +12,6 @@ class ModelClass(object):
         self.hostname = hostname
         self.action_param = action_param
         self.host_param = host_param
-
-    def sftp_put_dir_exclude(self, remote_dir, local_dir, excludes=[]):
-        err_list = []
-        for file in os.listdir(local_dir):
-            # local_dir目录中每一个文件或目录的完整路径
-            loc_path_filename = os.path.join(local_dir, file)
-            if C.exclude_files(file, loc_path_filename, excludes):
-                continue
-
-            # 如果是目录，则递归处理该目录
-            if os.path.isdir(loc_path_filename):
-                rmt_dir = Path(os.path.join(remote_dir, file)).as_posix()
-                try:
-                    self.conn._connect_sftp().mkdir(rmt_dir)
-                except:
-                    pass
-                self.mylog.debug(r'Put文件夹 %s 传输中...' % loc_path_filename)
-                self.sftp_put_dir_exclude(remote_dir=rmt_dir, local_dir=loc_path_filename, excludes=excludes)
-            else:
-                remote_filename = Path(os.path.join(remote_dir, file)).as_posix()
-                self.mylog.debug(r'  Put文件  %s 传输中...' % loc_path_filename)
-                self.mylog.debug(r'     位置  {file} 传输中...'.format(file=remote_filename))
-                try:
-                    self.conn.put_file(loc_path_filename, remote_filename)
-                except:
-                    err_list.append(loc_path_filename)
-        if len(err_list) > 0:
-            return False
-        return True
 
     def action(self):
         err_list = []
@@ -83,14 +52,14 @@ class ModelClass(object):
                     except:
                         err_list.append(local_dir)
                 else:
-                    if not self.sftp_put_dir_exclude(remote_dir=remote_dir, local_dir=local_dir,
-                                                     excludes=self.action_param["exclude"]):
+                    if not self.conn.put_dir(remote_dir=remote_dir, local_dir=local_dir,
+                                                     excludes=self.action_param["exclude"])[0]:
                         err_list.append(local_dir)
             elif self.action_param["simple_type"] == 0:
                 # 复杂方式，目录下面有主机名文件夹，需要根据主机名文件夹进行上传
                 local_dir = os.path.join(self.action_param["source_dir"], self.hostname)
-                if not self.sftp_put_dir_exclude(remote_dir=self.action_param["dest_dir"], local_dir=local_dir,
-                                                 excludes=self.action_param["exclude"]):
+                if not self.conn.put_dir(remote_dir=self.action_param["dest_dir"], local_dir=local_dir,
+                                                 excludes=self.action_param["exclude"])[0]:
                     err_list.append(local_dir)
             else:
                 raise Exception(
