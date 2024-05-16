@@ -1,7 +1,0 @@
-PUBLIC:
-  公共参数key: 公共参数value
-ACTION:
-  - hosts: ALL
-    tasks:
-      - name: 检查hosts.yaml中主机名是否正确
-        CheckHostname:

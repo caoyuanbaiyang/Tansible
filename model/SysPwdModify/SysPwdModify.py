@@ -1,63 +1,66 @@
 # -*- coding: utf-8 -*-
-import os
 import json
+import os
+
 from lib.readcfg import ReadCfg
 
 
 class ModelClass(object):
-    def __init__(self, mylog):
+    def __init__(self, mylog, conn, hostname, action_param, host_param):
         self.mylog = mylog
+        self.conn = conn
+        self.hostname = hostname
+        self.action_param = action_param
+        self.host_param = host_param
 
-    def modifyNewPassword(self, hostname, ssh, password, newpassword):
+    def modifyNewPassword(self, password, newpassword):
         cmd = f"echo -e '{password}\n{newpassword}\n{newpassword}\n' | passwd"
-        stdin, stdout, stderr = ssh.exec_command(cmd)
+        recv_exit_status, _, stdout, stderr = self.conn.exec_command(cmd)
 
-        # 读取命令执行结果
-        output = stdout.read().decode('utf-8')
-        error = stderr.read().decode('utf-8')
-
-        if stderr.read().decode():
-            self.mylog.error(f"修改密码：修改失败-{error}")
+        if recv_exit_status != 0:
+            self.mylog.error(f"修改密码：修改失败-{stderr}")
+            json_result = {"status": "failed", "msg": f"修改密码失败-{stderr}"}
         else:
-            self.mylog.info(f"修改密码：修改成功-{output}")
+            self.mylog.info(f"修改密码：修改成功-{stdout}")
+            json_result = {"status": "success", "msg": f"修改密码成功-{stdout}"}
 
-    def checkwd(self, hostname, ssh, username, password):
+        return json_result
+
+    def checkwd(self, username, password):
         cmd = f"echo '{password}' | su - {username}"
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-
-        # 读取命令执行结果
-        output = stdout.read().decode('utf-8')
-        error = stderr.read().decode('utf-8')
+        recv_exit_status, _, stdout, stderr = self.conn.exec_command(cmd)
 
         # 输出命令执行结果
-        if error:
-            self.mylog.error(f"检查：主机登录检查失败-{error}")
+        if recv_exit_status != 0:
+            self.mylog.error(f"检查：主机登录检查失败-{stderr}")
+            json_result = {"status": "failed", "msg": f"主机登录检查失败-{stderr}"}
         else:
-            self.mylog.info(f"检查：主机登录检查成功-{output}")
+            self.mylog.info(f"检查：主机登录检查成功-{stdout}")
+            json_result = {"status": "success", "msg": "主机登录检查成功"}
+        return json_result
 
-    def action(self, ssh, hostname, param, hostparam=None):
-        if hostparam is None:
-            hostparam = []
+    def action(self):
         current_pwd = ""
         new_pwd = ""
-        if "current_pwd" in param:
-            current_pwd = param["current_pwd"]
-        if "current_pwd_file" in param:
-            current_pwd = ReadCfg().readcfg(os.path.join("config", param["current_pwd_file"]))[hostname]
-        if "new_pwd" in param:
-            new_pwd = param["new_pwd"]
-        if "new_pwd_file" in param:
-            new_pwd = ReadCfg().readcfg(os.path.join("config", param["new_pwd_file"]))[hostname]
+        if "current_pwd" in self.action_param:
+            current_pwd = self.action_param["current_pwd"]
+        if "current_pwd_file" in self.action_param:
+            current_pwd = ReadCfg().readcfg(
+                os.path.join("config", self.action_param["current_pwd_file"]))[self.hostname]
+        if "new_pwd" in self.action_param:
+            new_pwd = self.action_param["new_pwd"]
+        if "new_pwd_file" in self.action_param:
+            new_pwd = ReadCfg().readcfg(os.path.join("config", self.action_param["new_pwd_file"]))[self.hostname]
 
-        if param["action"] == "modify":
-            self.modifyNewPassword(hostname, ssh, current_pwd, new_pwd)
-        elif param["action"] == "checknew":
-            self.checkwd(hostname, ssh, hostparam["username"], new_pwd)
-        elif param["action"] == "checkcur":
-            self.checkwd(hostname, ssh, hostparam["username"], current_pwd)
+        if self.action_param["action"] == "modify":
+            json_result = self.modifyNewPassword(current_pwd, new_pwd)
+        elif self.action_param["action"] == "checknew":
+            json_result = self.checkwd(self.host_param["username"], new_pwd)
+        elif self.action_param["action"] == "checkcur":
+            json_result = self.checkwd(self.host_param["username"], current_pwd)
         else:
-            raise Exception('配置文件配置错误:未知action参数' + json.dumps(param))
+            raise Exception('配置文件配置错误:未知action参数' + json.dumps(self.action_param))
+
+        return json_result
 
 
-if __name__ == '__main__':
-    pass

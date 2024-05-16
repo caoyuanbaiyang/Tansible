@@ -28,6 +28,20 @@ PATTERN_WITH_SUBSCRIPT = re.compile(
 )
 
 
+def check_action_hostcfg(actions_obj, hosts_obj):
+    # 检查所有acion 中 hosts配置是否正确，如有误则返回False及有误列表
+    hostnames = []
+    err_rt_hostnames = []
+    for action in actions_obj["ACTION"]:
+        ok_hostnames, err_hostnames = hosts_obj.get_host_name(action["hosts"])
+        hostnames = hostnames + ok_hostnames
+        err_rt_hostnames = err_rt_hostnames + err_hostnames
+    if len(err_rt_hostnames) != 0:
+        return False, err_rt_hostnames
+    else:
+        return True, []
+
+
 class hosts(object):
     def __init__(self, mylog, groups, cfghosts):
         self.mylog = mylog
