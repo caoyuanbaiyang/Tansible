@@ -24,16 +24,15 @@ class ModelClass(object):
         self.bigcontent = None
         self.link = None
 
-    def download_from_linux(self, local_dir, remote_dir, excludes=[], md5filter=0):
+    def download_from_linux(self, local_dir, remote_dir):
         err_list = []
         # remote_dir 支持模糊匹配，目录配置必须以“/”结尾
         if not C.isContrainSpecialCharacter(remote_dir):
             if remote_dir.endswith("/"):
-                if not self.sftp_get_dir_exclude(local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
-                                                 md5filter=md5filter):
+                if not self.sftp_get_dir_exclude(local_dir=local_dir, remote_dir=remote_dir):
                     err_list.append(f"{self.hostname}:{remote_dir}")
             else:
-                if not self.sftp_get_file_exclude(local_dir, remote_dir, excludes, md5filter):
+                if not self.sftp_get_file_exclude(local_dir, remote_dir):
                     err_list.append(f"{self.hostname}:{remote_dir}")
         else:
             (tmp_remote_dir, filename) = os.path.split(remote_dir)
@@ -41,12 +40,10 @@ class ModelClass(object):
                 if match(file.filename, filename):
                     tmp_remote_dir1 = Path(os.path.join(tmp_remote_dir, file.filename)).as_posix()
                     if stat.S_ISDIR(file.st_mode):
-                        if not self.sftp_get_dir_exclude(local_dir=local_dir, remote_dir=tmp_remote_dir1,
-                                                         excludes=excludes, md5filter=md5filter):
+                        if not self.sftp_get_dir_exclude(local_dir=local_dir, remote_dir=tmp_remote_dir1):
                             err_list.append(f"{self.hostname}:{tmp_remote_dir1}")
                     else:
-                        if not self.sftp_get_file_exclude(local_dir=local_dir, remote_file=tmp_remote_dir1,
-                                                          excludes=excludes, md5filter=md5filter):
+                        if not self.sftp_get_file_exclude(local_dir=local_dir, remote_file=tmp_remote_dir1):
                             err_list.append(f"{self.hostname}:{tmp_remote_dir1}")
 
         if len(err_list) > 0:
@@ -57,15 +54,15 @@ class ModelClass(object):
         recv_exit_status, _, stdout, stderr = self.conn.exec_command(command)
         return stdout.rtrip('\n')
 
-    def sftp_get_file_exclude(self, local_dir, remote_file, excludes=[], md5filter=0):
+    def sftp_get_file_exclude(self, local_dir, remote_file):
         result = True  # False 表示有错误，Ture表示正常
         (tmp_dir, filename) = os.path.split(remote_file)
         tmp_local_filename = os.path.join(local_dir, filename)
         filesize = self.conn._connect_sftp().stat(remote_file).st_size
-        if filename in excludes or remote_file in excludes:
+        if filename in self.excludes or remote_file in self.excludes:
             self.mylog.debug('  跳过文件  {}'.format(remote_file))
             return True
-        if filesize > md5filter:
+        if filesize > self.md5filter:
             md5cmd = "md5sum " + remote_file
             content = self.execcommand(md5cmd)
             self.mylog.debug('  Get文件  {} size: {} 传输中...'.format(remote_file, filesize))
@@ -84,14 +81,14 @@ class ModelClass(object):
                                                                      loc=tmp_local_filename))
         return result
 
-    def sftp_get_dir_exclude(self, local_dir, remote_dir, excludes=[], md5filter=0):
+    def sftp_get_dir_exclude(self, local_dir, remote_dir):
         err_list = []
         # remote_dir 如果是目录,列出所有目录下的文件及目录循环处理
         for file in self.conn._connect_sftp().listdir_attr(remote_dir):
             remote_path_filename = Path(os.path.join(remote_dir, file.filename)).as_posix()
 
             # 如果判断为无需下载的文件，则跳过本次循环，处理下一个文件名词
-            if C.exclude_files(file.filename, remote_path_filename, excludes):
+            if C.exclude_files(file.filename, remote_path_filename, self.excludes):
                 continue
 
             # 如果是目录，则递归处理该目录，远端通过stat.S_ISDIR(st_mode)
@@ -99,8 +96,7 @@ class ModelClass(object):
                 tmp_local_dir = os.path.join(local_dir, file.filename)
                 if not os.path.exists(tmp_local_dir):
                     os.makedirs(tmp_local_dir)
-                self.sftp_get_dir_exclude(local_dir=tmp_local_dir, remote_dir=remote_path_filename,
-                                          excludes=excludes, md5filter=md5filter)
+                self.sftp_get_dir_exclude(local_dir=tmp_local_dir, remote_dir=remote_path_filename)
                 self.mylog.debug('Get文件夹%s 传输中...' % remote_path_filename)
                 self.mylog.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
             else:
@@ -115,7 +111,7 @@ class ModelClass(object):
                         err_list.append(remote_path_filename)
                 # 普通文件
                 else:
-                    if not self.sftp_get_file_exclude(local_dir, remote_path_filename, excludes, md5filter):
+                    if not self.sftp_get_file_exclude(local_dir, remote_path_filename):
                         err_list.append(remote_path_filename)
 
         if len(err_list) > 0:
@@ -128,8 +124,8 @@ class ModelClass(object):
             remote_dir = remote_dir.replace("$HOME", "/home/" + self.host_param["username"])
         if not ("exclude" in cfg_value) or cfg_value["exclude"] is None:
             cfg_value["exclude"] = []
-        excludes = cfg_value["exclude"]
-        md5filter = cfg_value["md5filter"]
+        self.excludes = cfg_value["exclude"]
+        self.md5filter = cfg_value["md5filter"]
 
         if not ("bigcontent" in cfg_value) or cfg_value["bigcontent"] is None:
             self.bigcontent = ["size", "mtime", "st_mode"]
@@ -148,8 +144,7 @@ class ModelClass(object):
 
         if not os.path.exists(local_dir):
             os.makedirs(local_dir)
-        return self.download_from_linux(local_dir=local_dir, remote_dir=remote_dir, excludes=excludes,
-                                        md5filter=md5filter)
+        return self.download_from_linux(local_dir=local_dir, remote_dir=remote_dir)
 
     def action(self):
         err_list = []
