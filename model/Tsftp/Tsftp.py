@@ -2,10 +2,6 @@
 
 import json
 import os
-import stat
-from pathlib import Path
-
-import lib.constants as C
 
 
 class ModelClass(object):
