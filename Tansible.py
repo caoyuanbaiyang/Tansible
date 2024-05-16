@@ -163,11 +163,6 @@ class Tansible(object):
                 failed_count += 1
         C.logger.info('')
         C.logger.info('PLAY RECAP******************************************************************************')
-        if success_count > 0:
-            C.logger.green(f'成功执行{success_count}个任务')
-        if failed_count > 0:
-            C.logger.error(f'失败执行{failed_count}个任务')
-
         # 打印执行结果详细信息
         C.logger.info('')
         status, modelname, hostname = "执行结果",  "模块名", "主机名"
@@ -177,3 +172,8 @@ class Tansible(object):
                 C.logger.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}")
             else:
                 C.logger.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}")
+
+        if success_count > 0:
+            C.logger.green(f'成功执行{success_count}个任务')
+        if failed_count > 0:
+            C.logger.error(f'失败执行{failed_count}个任务')
