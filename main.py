@@ -1,6 +1,7 @@
 # 这是一个示例 Python 脚本。
 import argparse
-
+import codecs
+codecs.register(lambda name: codecs.lookup('utf-8') if name == 'idna' else None)
 
 from Tansible import Tansible
 
