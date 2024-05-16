@@ -41,7 +41,7 @@ class ModelClass(object):
         bak_file = local_file + "_bak"
         if ctype == "DOWNLOAD":
             try:
-                self.conn._connect_sftp().get(remote_file, local_file)
+                self.conn.fetch_file(remote_file, local_file)
                 # 备份文件，方便对比及回滚
                 shutil.copy(local_file, bak_file)
             except:
