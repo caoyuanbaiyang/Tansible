@@ -11,7 +11,7 @@ def args_fun():
                         help='input the action file name,like action.yml')
     parser.add_argument('-ho ', '--hosts_config_file', type=str, default='config/hosts.yaml',
                         help='input hosts file name,default is  hosts.yml')
-    parser.add_argument('-g ', '--groups_config_file', type=str,
+    parser.add_argument('-g ', '--groups_config_file', type=str, default='config/groups.yaml',
                         help='input groups file name,default is  groups.yml')
     parser.add_argument('-s ', '--run_step_by_step', action='store_const', const=True,
                         help='enable step by step mode, only run with single thread and only for debug')
@@ -25,7 +25,7 @@ def work():
     print(
         "usage: Tansible.exe [-h] [-a playbook] [-ho hosts_config_file] [-g groups_config_files] [-s] [-w workers]...")
     args = args_fun()
-
+    print(args)
     obj = Tansible(actions_file=args.action_file, hosts_file=args.hosts_config_file,
                    groups_file=args.groups_config_file, max_workers=args.workers, step_by_step=args.run_step_by_step)
     obj.action_func()
