@@ -3,7 +3,7 @@ import os
 import sys
 from fnmatch import fnmatchcase as match
 
-from lib.logger import logger
+from lib.Logger import logger
 from lib.readcfg import ReadCfg
 
 DEFAULT_LOG_FILE = "syslog.log"
