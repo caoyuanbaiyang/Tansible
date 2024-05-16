@@ -1,4 +1,5 @@
 import importlib
+import os.path
 import sys
 import threading
 import time
@@ -11,7 +12,10 @@ import lib.paramiko_ssh as paramiko_ssh
 
 class Tansible(object):
     def __init__(self, actions_file=None, hosts_file=None, groups_file=None, max_workers=None, step_by_step=None):
-        self.groups = C.load_groups_file(groups_file) if groups_file else []
+        if groups_file == "config/groups.yaml":
+            self.groups = C.load_groups_file(groups_file) if os.path.exists(groups_file) else []
+        else:
+            self.groups = C.load_groups_file(groups_file)
         self.hosts = C.load_hosts_file(hosts_file) if hosts_file else []
         self.actions, self.actions_file_name = C.load_actions_file(actions_file)
 
