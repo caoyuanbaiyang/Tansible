@@ -23,8 +23,6 @@ def args_fun():
 
 
 def work():
-    print(
-        "usage: Tansible.exe [-h] [-a playbook] [-ho hosts_config_file] [-g groups_config_files] [-s] [-w workers]...")
     args = args_fun()
     print(args)
     obj = Tansible(actions_file=args.action_file, hosts_file=args.hosts_config_file,
