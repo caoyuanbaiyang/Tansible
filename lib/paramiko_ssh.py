@@ -113,8 +113,8 @@ class Connection(object):
         C.logger.debug(f"EXEC {quoted_command} at {self.host}")
         chan.exec_command(quoted_command)
 
-        stdout = b''.join(chan.makefile('rb', bufsize)).decode('utf-8')
-        stderr = b''.join(chan.makefile_stderr('rb', bufsize)).decode('utf-8')
+        stdout = b''.join(chan.makefile('rb', bufsize)).decode('utf-8', 'ignore')
+        stderr = b''.join(chan.makefile_stderr('rb', bufsize)).decode('utf-8', 'ignore')
         return chan.recv_exit_status(), '', stdout, stderr
 
     def put_file(self, in_path, out_path):
