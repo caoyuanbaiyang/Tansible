@@ -56,6 +56,9 @@ class Tansible(object):
                 conn = paramiko_ssh.Connection(host=host["ip"], user=host["username"], conn_type=host["connect_type"],
                                                key_filename=host["key_filename"],
                                                passphrase=host["passphrase"]).connect()
+            # 模块翻译,如果在翻译列表中则用翻译后的重新赋值
+            if modelname in C.MODULE_TRANS_DICT:
+                modelname = C.MODULE_TRANS_DICT[modelname]
 
             m = importlib.import_module("model." + modelname + "." + modelname)
             result = m.ModelClass(C.logger, conn, hostname, param, host).action()
