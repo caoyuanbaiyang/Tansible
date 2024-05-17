@@ -10,6 +10,18 @@ down_dir = r"download\dbpwdmodify"
 down_dir_bak = down_dir + now_time
 
 
+def change_pwd_cfg(file, cfgitem):
+    # 修改密码
+    with open(file, "r", encoding="utf-8") as f:
+        lines = f.readlines()
+    with open(file, "w", encoding="utf-8", newline='') as f_w:
+        for line in lines:
+            line = line.strip()
+            if cfgitem["instr"] in line and line[0] != '#':
+                line = cfgitem["instr"] + cfgitem["pwd"]
+            f_w.write(line + '\n')
+
+
 class ModelClass(object):
     def __init__(self, mylog, conn, hostname, action_param, host_param):
         self.mylog = mylog
@@ -17,17 +29,6 @@ class ModelClass(object):
         self.hostname = hostname
         self.action_param = action_param
         self.host_param = host_param
-
-    def change_pwd_cfg(self, file, cfgitem):
-        # 修改密码
-        with open(file, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-        with open(file, "w", encoding="utf-8", newline='') as f_w:
-            for line in lines:
-                line = line.strip()
-                if cfgitem["instr"] in line and line[0] != '#':
-                    line = cfgitem["instr"] + cfgitem["pwd"]
-                f_w.write(line + '\n')
 
     def __acton_inner(self, hostname, svr_name, cfg_item, ctype):
         result = True  # True 表示正确， False 表示有错误
@@ -50,7 +51,7 @@ class ModelClass(object):
             else:
                 self.mylog.debug('Get文件 {host}:{file} 传输完成...'.format(host=hostname, file=remote_file))
                 # 修改密码
-                self.change_pwd_cfg(local_file, cfg_item)
+                change_pwd_cfg(local_file, cfg_item)
         else:
             try:
                 if ctype == "UPLOAD":
