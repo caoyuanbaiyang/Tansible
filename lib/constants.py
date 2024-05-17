@@ -3,6 +3,8 @@ import os
 import sys
 from fnmatch import fnmatchcase as match
 
+import chardet
+
 from lib.logger import logger
 from lib.readcfg import ReadCfg
 
@@ -91,8 +93,11 @@ def PackHost(pub_cfg, host_cfg):
 
 # 为兼容旧版，创建一个模块翻译的字典
 MODULE_TRANS_DICT = {
-    "Tshell": "shell",
-    "Tsftp": "sftp",
+    "shell": "Tshell",
+    "sftp": "Tsftp",
+    "upload": "Tupload",
+    "vsget1": "Tvsget1",
+    "passwd": "SysPwdModify",
 }
 
 
@@ -117,3 +122,13 @@ def isContrainSpecialCharacter(string):
         if i in string:
             return True
     return False
+
+
+def decode_byte_string(byte_string):
+    # 检测字节对象的编码类型
+    detected_encoding = chardet.detect(byte_string)['encoding']
+
+    # 根据检测到的编码类型进行解码
+    decoded_string = byte_string.decode(detected_encoding)
+
+    return decoded_string
