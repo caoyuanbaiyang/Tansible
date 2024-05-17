@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import sys
@@ -8,12 +9,20 @@ import chardet
 from lib.logger import logger
 from lib.readcfg import ReadCfg
 
-DEFAULT_LOG_FILE = "syslog.log"
+
+
 DEFAULT_HOSTS_FILE = "config/hosts.yaml"
 DEFAULT_GROUPS_FILE = "config/groups.yaml"
 DEFAULT_ACTION_FILE = "config/action.yaml"
 
-logger = logger('tansible.log', clevel=logging.INFO, Flevel=logging.DEBUG)
+current_time = datetime.datetime.now()
+formatted_time = current_time.strftime('%Y%m%d-%H%M%S')
+log_file = "logs/tansible"+formatted_time+".log"
+
+if not os.path.exists("logs"):
+    os.mkdir("logs")
+
+logger = logger(log_file, clevel=logging.INFO, Flevel=logging.DEBUG)
 
 
 def load_hosts_file(hosts_file):
