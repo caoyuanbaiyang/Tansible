@@ -13,14 +13,33 @@ python paramiko
 
 
 #### 使用说明
+```
+usage: Tansible3.0.exe [-h] [-a ACTION_FILE] [-ho  HOSTS_CONFIG_FILE] [-g  GROUPS_CONFIG_FILE] [-s] [-w  WORKERS]
 
-1. config/hosts.yaml 文件中创建主机相关信息
-2. config/groups.yaml 中创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
-3. 按需创建action文件，action.yaml是默认文件，文件名称可自定义
+Tansible command line tool
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -a ACTION_FILE, --action_file ACTION_FILE
+                        input the action file name,like action.yml
+  -ho  HOSTS_CONFIG_FILE, --hosts_config_file HOSTS_CONFIG_FILE
+                        input hosts file name,default is hosts.yml
+  -g  GROUPS_CONFIG_FILE, --groups_config_file GROUPS_CONFIG_FILE
+                        input groups file name,default is groups.yml
+  -s , --run_step_by_step
+                        enable step by step mode, only run with single thread and only for debug
+  -w  WORKERS, --workers WORKERS
+                        run with multi thread,you can set the number of threads here or in the action file
+```
+1. -a 指定具体动作文件，类似与ansible的playbook，默认为config/action.yaml文件
+2. -ho 指定主机配置文件，默认为config/hosts.yaml， 文件主要包含主机相关信息
+3. -g 指定群组文件，默认为config/groups.yaml，文件创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
+4. 按需创建action文件，action.yaml是默认文件，文件名称可自定义
     - cmd>Tansible.exe #运行的是action.yaml中的配置
-    - cmd>Tansible.exe test.yaml #运行的是config/test.yaml 中的配置
-4. 建议创建指定bat文件，关联action文件，以方便执行相关任务
-5. 单步运行模式增加 -s 选项如 cmd>Tansible.exe test.yaml -s 
+    - cmd>Tansible.exe -a config/test.yaml #运行的是config/test.yaml 中的配置
+5. 建议创建指定bat文件，关联action文件，以方便执行相关任务
+6. 单步运行模式增加 -s 选项如 cmd>Tansible.exe -s
+7.  默认为单线程模式运行，可增加 -w 选项指定运行线程数，如 cmd>Tansible.exe -w 10
 
 #### hosts.yaml文件配置说明
 该文件的配置信息主要用于连接远程机器用，如主机名、IP、用户名，密码或秘钥文件等信息，目前支持的配置信息如下。
