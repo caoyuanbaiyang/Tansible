@@ -1,6 +1,5 @@
 import importlib
 import os.path
-import sys
 import threading
 import time
 
@@ -8,29 +7,21 @@ import lib.constants as C
 import lib.hosts as host_func
 from concurrent.futures import ThreadPoolExecutor
 import lib.paramiko_ssh as paramiko_ssh
+from lib.readcfg import ReadCfg
 
 
 class Tansible(object):
     def __init__(self, actions_file=None, hosts_file=None, groups_file=None, max_workers=None, step_by_step=None):
         if groups_file == "config/groups.yaml":
-            self.groups = C.load_groups_file(groups_file) if os.path.exists(groups_file) else []
+            self.groups = ReadCfg().readcfg(groups_file) if os.path.exists(groups_file) else []
         else:
-            self.groups = C.load_groups_file(groups_file)
-        self.hosts = C.load_hosts_file(hosts_file) if hosts_file else []
+            self.groups = ReadCfg().readcfg(groups_file)
+        self.hosts = ReadCfg().readcfg(hosts_file) if hosts_file else []
         self.actions, self.actions_file_name = C.load_actions_file(actions_file)
 
-        if max_workers is not None:
-            self.max_workers = max_workers
-        else:
-            if "max_workers" in self.actions["PUBLIC"]:
-                self.max_workers = self.actions["PUBLIC"]["max_workers"]
-            else:
-                self.max_workers = 1
+        self.max_workers = max_workers if max_workers is not None else self.actions["PUBLIC"].get("max_workers", 1)
 
-        if step_by_step is not None:
-            self.step_by_step = step_by_step
-        else:
-            self.step_by_step = False
+        self.step_by_step = step_by_step if step_by_step is not None else False
 
         self.result = []
 
