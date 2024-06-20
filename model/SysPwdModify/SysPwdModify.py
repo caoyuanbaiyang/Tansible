@@ -3,7 +3,7 @@ import json
 import os
 
 from lib.readcfg import ReadCfg
-
+import lib.constants as C
 
 class ModelClass(object):
     def __init__(self, mylog, conn, hostname, action_param, host_param):
@@ -46,11 +46,12 @@ class ModelClass(object):
             current_pwd = self.action_param["current_pwd"]
         if "current_pwd_file" in self.action_param:
             current_pwd = ReadCfg().readcfg(
-                os.path.join("config", self.action_param["current_pwd_file"]))[self.hostname]
+                os.path.join(C.DEFAULT_CONFIG_DIR, self.action_param["current_pwd_file"]))[self.hostname]
         if "new_pwd" in self.action_param:
             new_pwd = self.action_param["new_pwd"]
         if "new_pwd_file" in self.action_param:
-            new_pwd = ReadCfg().readcfg(os.path.join("config", self.action_param["new_pwd_file"]))[self.hostname]
+            new_pwd = ReadCfg().readcfg(
+                os.path.join(C.DEFAULT_CONFIG_DIR, self.action_param["new_pwd_file"]))[self.hostname]
 
         if self.action_param["action"] == "modify":
             json_result = self.modifyNewPassword(current_pwd, new_pwd)
