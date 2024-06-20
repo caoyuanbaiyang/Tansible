@@ -10,35 +10,21 @@ from lib.logger import logger
 from lib.readcfg import ReadCfg
 
 
+DEFAULT_CONFIG_DIR = "config/"
+DEFAULT_LOG_DIR = "logs/"
 
-DEFAULT_HOSTS_FILE = "config/hosts.yaml"
-DEFAULT_GROUPS_FILE = "config/groups.yaml"
-DEFAULT_ACTION_FILE = "config/action.yaml"
+DEFAULT_HOSTS_FILE = DEFAULT_CONFIG_DIR + "hosts.yaml"
+DEFAULT_GROUPS_FILE = DEFAULT_CONFIG_DIR + "groups.yaml"
+DEFAULT_ACTION_FILE = DEFAULT_CONFIG_DIR + "action.yaml"
 
 current_time = datetime.datetime.now()
 formatted_time = current_time.strftime('%Y%m%d-%H%M%S')
-log_file = "logs/tansible"+formatted_time+".log"
+log_file = DEFAULT_LOG_DIR + "tansible"+formatted_time+".log"
 
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
 logger = logger(log_file, clevel=logging.INFO, Flevel=logging.DEBUG)
-
-
-def load_hosts_file(hosts_file):
-    hosts_cfg_file = hosts_file if hosts_file is not None else DEFAULT_HOSTS_FILE
-    if os.path.exists(hosts_cfg_file):
-        return ReadCfg().readcfg(hosts_cfg_file)
-    else:
-        raise Exception(f"hosts配置文件{hosts_cfg_file}不存在")
-
-
-def load_groups_file(groups_file):
-    groups_cfg_file = groups_file if groups_file is not None else DEFAULT_GROUPS_FILE
-    if os.path.exists(groups_cfg_file):
-        return ReadCfg().readcfg(groups_cfg_file)
-    else:
-        raise Exception(f"groups配置文件{groups_cfg_file}不存在")
 
 
 def load_actions_file(actions_file):
