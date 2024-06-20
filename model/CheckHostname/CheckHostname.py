@@ -6,7 +6,7 @@ class ModelClass(object):
         self.mylog = mylog
         self.conn = conn
         self.hostname = hostname
-        self.action_param = action_param
+        self.action_param = action_param if action_param is not None else {}
         self.host_param = host_param
 
     def check_hostname(self):
@@ -21,8 +21,8 @@ class ModelClass(object):
 
     def action(self):
 
-        if self.action_param is None or "cmd" not in self.action_param.keys():
-            param = {"cmd": "hostname"}
+        if "cmd" not in self.action_param.keys():
+            self.action_param["cmd"] = "hostname"
         rz, cmd_hostname = self.check_hostname()
 
         if rz:
