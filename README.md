@@ -250,10 +250,15 @@ Tsftp:
 ```yaml
 # 该模块提供运程执行命令的功能
 cmd: 'hostname'
-check: ['str','in','ture']     #可选参数[类型，运输符，检查值]
+check: ['str','in','ture']     #可选参数[类型，运输符，检查值]，check参数为对cmd返回结果进行检查，类型支持str,int两种
+                               # str支持==和in运算符，int支持<, <=, ==, >=, >运输符
 例1：查看主机名
 Tshell:
   cmd: hostname
+例2：检查java进程
+Tshell:
+  cmd: ps -ef | grep java | wc -l
+  check: ['int', '>=', '1']
 ```
 
 ```
