@@ -35,6 +35,10 @@ def args_check(args):
     if args.groups_config_file != C.DEFAULT_GROUPS_FILE and not os.path.exists(args.groups_config_file):
         print(f"groups file {args.groups_config_file} not exist")
         exit(1)
+    # -s 选项只能在单线程模式下使用
+    if args.run_step_by_step and args.workers > 1 :
+        print("-s option only can be used in single thread mode")
+        exit(1)
 
 def work():
     args = args_fun()
