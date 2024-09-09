@@ -52,7 +52,7 @@ class ModelClass(object):
 
     def execcommand(self, command):
         recv_exit_status, _, stdout, stderr = self.conn.exec_command(command)
-        return stdout.rtrip('\n')
+        return stdout.rstrip('\n')
 
     def sftp_get_file_exclude(self, local_dir, remote_file):
         result = True  # False 表示有错误，Ture表示正常
