@@ -6,6 +6,7 @@ import time
 import lib.constants as C
 import lib.hosts as host_func
 from concurrent.futures import ThreadPoolExecutor
+import concurrent.futures
 import lib.paramiko_ssh as paramiko_ssh
 from lib.readcfg import ReadCfg
 
@@ -83,7 +84,10 @@ class Tansible(object):
                             C.logger.info(f"主机列表：{hostname_list}")
                             continue
                         if modelname == "BreakPoint":
-                            C.logger.info(f"并发模式下不支持BreakPoint模块")
+                            # 等待所有线程完成
+                            C.logger.info("等待所有线程执行完成...")
+                            concurrent.futures.wait(futures)
+                            C.logger.info("所有线程执行完成")
                             continue
                         # 每个模块都要对所有设置的主机去执行，因此此处遍历所有主机去调用模块动作
                         for hostname in hostname_list:
