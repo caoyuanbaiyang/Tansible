@@ -65,9 +65,11 @@ class ModelClass(object):
         if filesize > self.md5filter:
             md5cmd = "md5sum " + remote_file
             content = self.execcommand(md5cmd)
-            self.mylog.debug('  Get文件  {} size: {} 传输中...'.format(remote_file, filesize))
+            md5 = content.split()[0]
+
+            self.mylog.debug('  Get文件  {} size: {} md5: {} 传输中...'.format(remote_file, filesize, md5))
             try:
-                generatebigersizefile(tmp_local_filename, content[1].split()[0])
+                generatebigersizefile(tmp_local_filename, md5)
             except:
                 result = False
         else:
