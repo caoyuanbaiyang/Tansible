@@ -32,6 +32,7 @@ class Tansible(object):
 
     def __action_func_inner(self, hostname, modelname, param):
         try:
+            start_time = time.time()
             C.logger.info(f"------模块:{modelname},主机:{hostname}")
             C.logger.debug(f"Thread ID: {threading.get_ident()}")
             host = self.hosts["HOST"][hostname]
@@ -54,13 +55,17 @@ class Tansible(object):
 
             m = importlib.import_module("model." + modelname + "." + modelname)
             result = m.ModelClass(C.logger, conn, hostname, param, host).action()
+
+            end_time = time.time()
+
             # 补充模块信息和主机信息
             result["hostname"] = hostname
             result["modelname"] = modelname
+            result["costtime"] = end_time - start_time
 
         except Exception as e:
             C.logger.cri(f"执行失败: 错误信息-{e}")
-            result = {"status": "failed", "msg": "执行失败", "hostname": hostname, "modelname": modelname}
+            result = {"status": "failed", "msg": "执行失败", "hostname": hostname, "modelname": modelname, "costtime": 0}
         finally:
             return result
 
@@ -93,8 +98,8 @@ class Tansible(object):
                         for hostname in hostname_list:
                             futures.append(t.submit(self.__action_func_inner, hostname, modelname, param))
         for future in futures:
-            self.result.append(future.result())
-            C.logger.debug(future.result())
+            self.result.append(future.result(timeout=10))
+            C.logger.debug(future.result(timeout=10))
 
     def run_single_thread(self, hosts_obj):
         C.logger.debug("单线程执行")
@@ -163,13 +168,13 @@ class Tansible(object):
         C.logger.info('PLAY RECAP******************************************************************************')
         # 打印执行结果详细信息
         C.logger.info('')
-        status, modelname, hostname = "执行结果",  "模块名", "主机名"
-        C.logger.info(f'{status:15s}{modelname:25s}{hostname:25s}')
+        status, modelname, hostname, costtime = "执行结果",  "模块名", "主机名", "执行秒数"
+        C.logger.info(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}')
         for k in self.result:
             if k['status'] == 'success':
-                C.logger.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}")
+                C.logger.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
             else:
-                C.logger.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}")
+                C.logger.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
 
         if success_count > 0:
             C.logger.green(f'成功执行{success_count}个任务')
