@@ -19,7 +19,10 @@
 import os
 import pipes
 import stat
+import time
 from pathlib import Path
+
+import select
 
 import lib.constants as C
 
@@ -113,9 +116,31 @@ class Connection(object):
         C.logger.debug(f"EXEC {quoted_command} at {self.host}")
         chan.exec_command(quoted_command)
 
-        stdout = b''.join(chan.makefile('rb', bufsize)).decode('utf-8', 'ignore')
-        stderr = b''.join(chan.makefile_stderr('rb', bufsize)).decode('utf-8', 'ignore')
-        return chan.recv_exit_status(), '', stdout, stderr
+        stdout = []
+        stderr = []
+
+        # Read stdout
+        _ready = chan.recv_ready()
+        while not _ready:
+            _ready, _, _ = select.select([chan], [], [], 10)
+            time.sleep(0.1)
+            print('sleep 0.1')
+
+        while chan.recv_ready():
+            data = chan.recv(4096)
+            stdout.append(data)
+            if not data:
+                break
+
+        # Read stderr
+        while chan.recv_stderr_ready():
+            data = chan.recv_stderr(4096)
+            stderr.append(data)
+
+        exit_status = chan.recv_exit_status()
+        stdout = b''.join(stdout).decode('utf-8', 'ignore')
+        stderr = b''.join(stderr).decode('utf-8', 'ignore')
+        return exit_status, '', stdout, stderr
 
     def put_file(self, in_path, out_path):
         """ transfer a file from local to remote """
