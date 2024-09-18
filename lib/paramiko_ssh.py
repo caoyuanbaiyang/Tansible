@@ -101,6 +101,7 @@ class Connection(object):
         """ run a command on the remote host """
 
         bufsize = 4096
+        timeout = 10
         try:
             chan = self.ssh.get_transport().open_session()
         except Exception as e:
@@ -122,19 +123,19 @@ class Connection(object):
         # Read stdout
         _ready = chan.recv_ready()
         while not _ready:
-            _ready, _, _ = select.select([chan], [], [], 10)
+            _ready, _, _ = select.select([chan], [], [], timeout)
             time.sleep(0.1)
             print('sleep 0.1')
 
         while chan.recv_ready():
-            data = chan.recv(4096)
+            data = chan.recv(bufsize)
             stdout.append(data)
             if not data:
                 break
 
         # Read stderr
         while chan.recv_stderr_ready():
-            data = chan.recv_stderr(4096)
+            data = chan.recv_stderr(bufsize)
             stderr.append(data)
 
         exit_status = chan.recv_exit_status()
