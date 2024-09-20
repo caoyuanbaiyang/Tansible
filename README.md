@@ -35,7 +35,7 @@ optional arguments:
 2. -ho 指定主机配置文件，默认为config/hosts.yaml， 文件主要包含主机相关信息
 3. -g 指定群组文件，默认为config/groups.yaml，文件创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
 4. 按需创建action文件，action.yaml是默认文件，文件名称可自定义
-    - cmd>Tansible.exe #运行的是action.yaml中的配置
+    - cmd>Tansible.exe #运行的是config/action.yaml中的配置
     - cmd>Tansible.exe -a config/test.yaml #运行的是config/test.yaml 中的配置
 5. 建议创建指定bat文件，关联action文件，以方便执行相关任务
 6. 单步运行模式增加 -s 选项如 cmd>Tansible.exe -s
@@ -153,21 +153,6 @@ CheckHostname:
 CheckHostname:
   cmd: 'echo $(hostname)-$USER'
 ```
-###### DbPwdModify，数据库密码配置文件调整，单个文件
-*模块参数*
-
-```yaml
-# 该模块提供单个密码配置文件的下载，并修改密码，提供下载改密码、发布新配置文件及回滚功能
-# 下载到download\dbpwdmodify 目录下
-# action 提供DOWNLOAD,UPLOAD,ROLLBACK选项，分别为下载改密，发布及回滚功能
-例1：
-DbPwdModify:
-   cfg_file : /home/xx/yy/webapps/ROOT/WEB-INF/conf/application-jdbc.properties 
-   instr: 'spring.datasource.password=' 
-   pwd: BlowFish
-   action:
-     - DOWNLOAD
-```
 
 ###### DbPwdModifys，数据库密码配置文件调整，多个文件
 *模块参数*
@@ -278,23 +263,7 @@ Tupload:
     source_dir: package
     dest_dir: /root/upload/
 ```
-###### Tvsget，版本下载模块，大文件获取size，mtime，st_mode
-*模块参数*
 
-```yaml
-# 该模块提供下载功能，用于版本对比，文件大小大于md5filter的将获取文件的大小、修改时间及st_mode，而不下载文件
-local_dir: 可选参数, 本地存放路径，可选，如果不设置则默认下载到download\Tsftp 目录下
-# 子文件夹名称，如果设置为{HOME}或者NO_DIR则表示不建子文件夹
-mntrad: 
-    # remote_dir 远程下载路径 ，文件夹的已/结尾，支持*模糊匹配           
-    remote_dir: /home/xx/ 
-    # exclude 可选参数
-    exclude: [不下载的文件在这里] 
-    # md5filter文件大于该值则不下载文件而是获取文件的大小、修改时间及st_mode
-    md5filter: 30000  
-    # bigcontent 可选参数，可设置"size", "mtime", "st_mode",不配置则默认全部获取
-    bigcontent:  size 
-```
 ###### Tvsget1，版本下载模块，大文件获取MD5码
 *模块参数*
 
@@ -315,10 +284,10 @@ mntrad:
 *模块参数*
 
 ```yaml
-# 当线程模式说明
+# 单线程模式说明
 # 该模块会提示用户输入是否继续运行的提示，只有输入y，程序才会继续运行
 # 该模块只有一个断点名称的参数
-# 多线程模式说
+# 多线程模式说明
 # 多线程模式下，该模块会等待所有线程结束，程序才会继续运行下面的任务
 name: 断点名称
 
@@ -330,13 +299,11 @@ BreakPoint:
 
 #### 参与贡献
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
-
 model 模板
 
 模板文件位置：model/模块名称/模块名称.py
+
+地址：
+https://gitee.com/tyq2020/Tansible
 
 
