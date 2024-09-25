@@ -117,7 +117,7 @@ class Tansible(object):
                     if modelname == "GetHostList":
                         C.logger.info(f"主机列表：{hostname_list}")
                         continue
-                    if modelname == "Breakpoint":
+                    if modelname == "BreakPoint":
                         # 单线程运行模式下，支持断点模块，该模块下，每个主机都会暂停
                         C.breakpoint_choice(param['name'])
                         continue
