@@ -98,8 +98,7 @@ class Tansible(object):
                         for hostname in hostname_list:
                             futures.append(t.submit(self.__action_func_inner, hostname, modelname, param))
         for future in futures:
-            self.result.append(future.result(timeout=10))
-            C.logger.debug(future.result(timeout=10))
+            self.result.append(future.result(timeout=120))
 
     def run_single_thread(self, hosts_obj):
         C.logger.debug("单线程执行")
@@ -126,7 +125,6 @@ class Tansible(object):
                         run_result = self.__action_func_inner(hostname, modelname, param)
                         # 将主机、模块运行的结果run_result 存入self.result中
                         self.result.append(run_result)
-                        C.logger.debug(run_result)
                         if self.step_by_step:
                             self.step_by_step = C.step_by_step_choice()
 
@@ -154,6 +152,7 @@ class Tansible(object):
         C.logger.info('')
         C.logger.info(f"time cost:{end_time - start_time:.2f} seconds")
         C.logger.green(f'############任务{self.actions_file_name}执行完成############')
+        self.dump_result_file()
 
     def statistics_result(self):
         # 统计执行结果
@@ -180,3 +179,16 @@ class Tansible(object):
             C.logger.green(f'成功执行{success_count}个任务')
         if failed_count > 0:
             C.logger.error(f'失败执行{failed_count}个任务')
+    def dump_result_file(self):
+        # 将执行结果写入到结果文件
+        result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.log"
+        C.logger.debug("self.result长度：" + str(len(self.result)))
+        with open(result_file, mode='w',encoding="utf-8",errors='ignore') as f:
+            status, modelname, hostname, costtime, msg = "执行结果", "模块名", "主机名", "执行秒数", "返回结果"
+            f.write(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}    {msg}\n')
+            for result in self.result:
+                content = f"{result['status']:15s}{result['modelname']:25s}{result['hostname']:25s}{result['costtime']:5.0f}    {result['msg']}"
+                if not content.endswith("\n"):
+                    content = content + "\n"
+                f.write(content)
+
