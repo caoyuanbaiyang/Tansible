@@ -1,6 +1,7 @@
 import datetime
 import logging
 import os
+import re
 import sys
 from fnmatch import fnmatchcase as match
 
@@ -17,6 +18,8 @@ DEFAULT_HOSTS_FILE = DEFAULT_CONFIG_DIR + "hosts.yaml"
 DEFAULT_GROUPS_FILE = DEFAULT_CONFIG_DIR + "groups.yaml"
 DEFAULT_ACTION_FILE = DEFAULT_CONFIG_DIR + "action.yaml"
 
+SYSTEM_NOTE_REGULAR_MATCH = r'.*~]\$ |.*~> |.*]\$ |.*\$ '
+
 current_time = datetime.datetime.now()
 formatted_time = current_time.strftime('%Y%m%d-%H%M%S')
 log_file = DEFAULT_LOG_DIR + "tansible"+formatted_time+".log"
@@ -26,6 +29,25 @@ if not os.path.exists("logs"):
 
 logger = logger(log_file, clevel=logging.INFO, Flevel=logging.DEBUG)
 
+
+def system_match(line):
+    """
+    使用正则检查该行是否匹配
+    :param line:
+    :return:
+    """
+    return re.match(SYSTEM_NOTE_REGULAR_MATCH, line)
+
+def decode_line(line):
+    try:
+        line = line.decode('UTF-8')
+    except:
+        try:
+            line = line.decode('GBK')
+        except:
+            logger.error(f'decode utf-8/GBK error #{line}#')
+            return ''
+    return line
 
 def load_actions_file(actions_file):
     actions_cfg_file = actions_file if actions_file is not None else DEFAULT_ACTION_FILE
