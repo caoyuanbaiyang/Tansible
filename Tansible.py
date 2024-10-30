@@ -179,6 +179,7 @@ class Tansible(object):
             C.logger.green(f'成功执行{success_count}个任务')
         if failed_count > 0:
             C.logger.error(f'失败执行{failed_count}个任务')
+            
     def dump_result_file(self):
         # 将执行结果写入到结果文件
         result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.log"
