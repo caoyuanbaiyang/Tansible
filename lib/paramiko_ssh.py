@@ -18,10 +18,12 @@
 
 import os
 import pipes
+import re
 import stat
 import time
 from pathlib import Path
 
+import chardet
 import select
 
 import lib.constants as C
@@ -143,6 +145,103 @@ class Connection(object):
         stderr = b''.join(stderr).decode('utf-8', 'ignore')
         return exit_status, '', stdout, stderr
 
+    def exec_command_invoke_shell(self, cmd):
+        """ run a command on the remote host """
+
+        channel = self.ssh.invoke_shell()
+        stdin = channel.makefile('wb')
+        stdout = channel.makefile('rb')
+        channel.send("export LANG=en_US.UTF-8 \n")
+        C.logger.debug(f"EXEC {cmd} at {self.host}")
+        exit_status, _, stdout, stderr = execute(cmd, stdin, stdout)
+        return exit_status, '', ''.join(stdout), ''.join(stderr)
+
+    def exec_command_qk(self, command, result, end_flag=None, out_line_Num=3, timeout=10):
+        """
+        对于第一次登陆时的提示符行以及命令执行结束时的提示符行会被过滤，奕即提示符行尽量不要与结果置为同一行，记得脚本换行。
+        :param ssh:
+        :param command:
+        :param end_flag:输出结束关键字，用于执行的脚本时间比较长，输出比较多时判断命令执行成功的标志。
+        :param out_line_Num: return值中的out总行数，当一条命令返回行数多余out_line_Num时，将只保留后面的内容，丢弃前面的
+        :return: 返回out
+        """
+        # out用于保存返回的输出，其他输出仅打印至日志中
+        out = list()
+        # 用于记录输出的索引，只需要保留最后3条
+        out_index = 0
+        # 用于删除第一次命令符提示符的标志
+        first_line = True
+        trans = self.ssh.get_transport()
+        channel = trans.open_session(timeout=timeout)
+        channel.get_pty()
+        channel.settimeout(timeout)
+        channel.invoke_shell()
+        # 上一次剩余的数据，有可能不是完整一行
+        rstlast = b''
+        # 先要等待登录成功提示符
+        while True:
+            time.sleep(0.2)
+            channel.recv_ready()
+            rst1 = channel.recv(1024)
+            rst1 = rstlast + rst1
+            lines = rst1.split(b'\n')
+            rstlast = lines[-1]
+            if C.system_match(C.decode_line(rstlast)):
+                break
+        # 发送命令
+        channel.send(command + '\n')
+        # 等待下一个命令提示符结束，或者等待特定结束标识
+        command_timeout = 0
+        while True:
+            time.sleep(0.2)
+            command_timeout = command_timeout + 0.2
+            if command_timeout > timeout:
+                C.logger.error(f'执行命令{command}超时{timeout}')
+                raise Exception(f'执行命令{command}超时{timeout}')
+            success = False
+            channel.recv_ready()
+            rst1 = channel.recv(1024)
+            rst1 = rstlast + rst1
+            lines = rst1.split(b'\n')
+            if first_line and len(lines) > 1:
+                first_line = False
+                del lines[0]
+            for line in lines[:-1]:
+                line = C.decode_line(line)
+                line = line.replace('\r', '')
+                if line.strip() == "":
+                    continue
+                if not success:
+                    if out_index < out_line_Num:
+                        out.append(line)
+                        out_index += 1
+                    else:
+                        out.append(line)
+                        del out[0]
+                if end_flag is None and C.system_match(line):
+                    success = True
+                if end_flag is not None and line.find(end_flag) != -1:
+                    success = True
+
+            # 无法判断lines[-1]这一行的信息是否已输出完成，如果未完成，那么不能放到out中，否则，out中的数据出现重复，如果已完成，并且命令执行已结束
+            # 那么后续不会有新的输出行，所以需要对最后一行判断是否命令已结束。
+            rstlast = lines[-1]
+            last_line = C.decode_line(rstlast)
+            if end_flag is None and C.system_match(last_line):
+                success = True
+            if end_flag is not None and last_line.find(end_flag) != -1:
+                success = True
+            if success:
+                break
+        time.sleep(0.2)
+        channel.send_exit_status(0)
+        channel.close()
+        if len(out) > 0:
+            if  C.system_match(out[-1]):
+                del out[-1]
+        result['out'] = out
+        return
+
     def put_file(self, in_path, out_path):
         """ transfer a file from local to remote """
         C.logger.debug("PUT %s TO %s" % (in_path, out_path))
@@ -259,3 +358,61 @@ class Connection(object):
         if self.sftp is not None:
             self.sftp.close()
         self.ssh.close()
+
+
+def execute(cmd, stdin, stdout):
+    """
+    :param stdout:
+    :param stdin:
+    :param cmd: the command to be executed on the remote computer
+    :examples:  execute('ls')
+                execute('finger')
+                execute('cd folder_name')
+    """
+    cmd = cmd.strip('\n')
+    stdin.write(cmd + '\n')
+    finish = 'end of stdOUT buffer. finished with exit status'
+    echo_cmd = 'echo {} $?'.format(finish)
+    stdin.write(echo_cmd + '\n')
+    shin = stdin
+    stdin.flush()
+
+    shout = []
+    sherr = []
+    exit_status = 0
+
+    for line_b in stdout:
+        if not chardet.detect(line_b)['encoding']:
+            __encoding = 'UTF-8'
+        else:
+            __encoding = chardet.detect(line_b)['encoding']
+        line = line_b.decode(__encoding, 'ignore')
+
+        if str(line).startswith(cmd) or str(line).startswith(echo_cmd):
+            # up for now filled with shell junk from stdin
+            shout = []
+        elif str(line).startswith(finish):
+            # our finish command ends with the exit status
+            exit_status = int(str(line).rsplit(maxsplit=1)[1])
+            if exit_status:
+                # stderr is combined with stdout.
+                # thus, swap sherr with shout in a case of failure.
+                sherr = shout
+                shout = []
+            break
+        else:
+            # get rid of 'coloring and formatting' special characters
+            shout.append(re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line).
+                         replace('\b', '').replace('\r', ''))
+
+    # first and last lines of shout/sherr contain a prompt
+    if shout and echo_cmd in shout[-1]:
+        shout.pop()
+    if shout and cmd in shout[0]:
+        shout.pop(0)
+    if sherr and echo_cmd in sherr[-1]:
+        sherr.pop()
+    if sherr and cmd in sherr[0]:
+        sherr.pop(0)
+
+    return exit_status, '', shout, sherr
