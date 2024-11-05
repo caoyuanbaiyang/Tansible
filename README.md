@@ -233,10 +233,10 @@ Tsftp:
 *模块参数*
 
 ```yaml
-# 该模块提供运程执行命令的功能
+# 该模块提供运程执行命令的功能，该模块执行命令的方式为paramiko_ssh.Connection.exec_command
 cmd: 'hostname'
 check: ['str','in','ture']     #可选参数[类型，运输符，检查值]，check参数为对cmd返回结果进行检查，类型支持str,int两种
-                               # str支持==和in运算符，int支持<, <=, ==, >=, >运输符
+                               # str支持==、in、not in、tail ==、tail not in、tail in 运算符，tail表示只对比最后一行的内容，int支持<, <=, ==, >=, >运输符
 例1：查看主机名
 Tshell:
   cmd: hostname
@@ -246,6 +246,22 @@ Tshell:
   check: ['int', '>=', '1']
 ```
 
+###### shell_invoke，远程执行命令模块
+*模块参数*
+
+```yaml
+# 该模块提供运程执行命令的功能,该模块与Tshell模块功能相同，但该模块执行命令的方式为paramiko_ssh.Connection.exec_command_invoke_shell
+cmd: 'hostname'
+check: ['str','in','ture']     #可选参数[类型，运输符，检查值]，check参数为对cmd返回结果进行检查，类型支持str,int两种
+                               # str支持==、in、not in、tail ==、tail not in、tail in ，tail表示只对比最后一行的内容，int支持<, <=, ==, >=, >运输符
+例1：查看主机名
+shell_invoke:
+  cmd: hostname
+例2：检查java进程
+shell_invoke:
+  cmd: ps -ef | grep java | wc -l
+  check: ['int', '>=', '1']
+```
 
 ###### Tupload，上传模块
 *模块参数*
