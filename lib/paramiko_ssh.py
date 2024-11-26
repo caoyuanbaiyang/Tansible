@@ -25,6 +25,7 @@ from pathlib import Path
 
 import chardet
 import select
+from Tools.scripts.md5sum import bufsize
 
 import lib.constants as C
 
@@ -40,7 +41,7 @@ SFTP_CONNECTION_CACHE = {}
 class Connection(object):
     """ SSH based connections with Paramiko """
 
-    def __init__(self, host, user, conn_type, password=None, key_filename=None, passphrase=None, port=22, timeout=3000):
+    def __init__(self, host, user, conn_type, password=None, key_filename=None, passphrase=None, port=22, timeout=3):
 
         self.ssh = None
         self.sftp = None
@@ -99,7 +100,7 @@ class Connection(object):
 
         return ssh
 
-    def exec_command(self, cmd, executable='/bin/sh'):
+    def exec_command(self, cmd, executable='/bin/sh', exec_timeout=C.DEFAULT_COMMAND_EXEC_TIMEOUT):
         """ run a command on the remote host """
 
         bufsize = 4096
@@ -122,16 +123,22 @@ class Connection(object):
         stdout = []
         stderr = []
 
+        start_time = time.time()
         # Read stdout
         _ready = chan.recv_ready()
         while not _ready:
+            if time.time() - start_time > exec_timeout:
+                exit_status = 1
+                stderr = f'执行命令{cmd}超时{exec_timeout},执行时间{round(time.time() - start_time)}'
+                return exit_status, '', ''.join(stdout), ''.join(stderr)
             _ready, _, _ = select.select([chan], [], [], timeout)
             time.sleep(0.1)
-            print('sleep 0.1')
+            print('select.select sleep 0.1')
 
         while chan.recv_ready():
             data = chan.recv(bufsize)
             stdout.append(data)
+            print('chan.recv ')
             if not data:
                 break
 
@@ -145,7 +152,42 @@ class Connection(object):
         stderr = b''.join(stderr).decode('utf-8', 'ignore')
         return exit_status, '', stdout, stderr
 
-    def exec_command_invoke_shell(self, cmd):
+    def exec_command_invoke_shell(self, cmd, end_pattern=C.DEFAULT_SSH_END_PATTERN, chan_timeout=C.DEFAULT_CONNECT_TIMEOUT, exec_timeout=C.DEFAULT_COMMAND_EXEC_TIMEOUT):
+        """ run a command on the remote host """
+        '''
+        :param cmd: command to be executed
+        :param chan_timeout: timeout for the channel
+        :param exec_timeout: timeout for the execution of the command
+        '''
+        bufsize = 65536
+        chan = self.ssh.invoke_shell()
+        chan.send(cmd + '\n')
+        chan.settimeout(chan_timeout)
+        C.logger.debug(f"EXEC {cmd} at {self.host}")
+        # 读取输出直到命令完成
+        stdout = ''
+        start_time = time.time()
+
+        while True:
+            time.sleep(0.2)  # 短暂等待
+
+            if time.time() - start_time > exec_timeout:
+                exit_status = 1
+                stderr = f'执行命令{cmd}超时{exec_timeout},执行时间{round(time.time() - start_time)}'
+                return exit_status, '', stdout, stderr
+
+            if chan.recv_ready():
+                stdout += chan.recv(bufsize).decode('utf-8')
+
+            # 检查是否出现了提示符,如果出现了提示符，则认为命令执行完成，无须再循环获取了
+            if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
+                break
+
+        exit_status = chan.recv_exit_status()
+
+        return exit_status, '', stdout, ''
+
+    def exec_command_invoke_shell_1(self, cmd):
         """ run a command on the remote host """
 
         channel = self.ssh.invoke_shell()
