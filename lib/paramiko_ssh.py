@@ -177,7 +177,7 @@ class Connection(object):
                 return exit_status, '', stdout, stderr
 
             if chan.recv_ready():
-                stdout += chan.recv(bufsize).decode('utf-8')
+                stdout += chan.recv(bufsize).decode('utf-8', errors='ignore')
 
             # 检查是否出现了提示符,如果出现了提示符，则认为命令执行完成，无须再循环获取了
             if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
