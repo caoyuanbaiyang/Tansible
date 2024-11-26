@@ -35,10 +35,10 @@ optional arguments:
 2. -ho 指定主机配置文件，默认为config/hosts.yaml， 文件主要包含主机相关信息
 3. -g 指定群组文件，默认为config/groups.yaml，文件创建主机组群相关信息，可将部分主机设定为一个组，方便后面的action文件调用
 4. 按需创建action文件，action.yaml是默认文件，文件名称可自定义
-    - cmd>Tansible.exe #运行的是config/action.yaml中的配置
-    - cmd>Tansible.exe -a config/test.yaml #运行的是config/test.yaml 中的配置
+    - cmd>Tansible3.0.exe #运行的是config/action.yaml中的配置
+    - cmd>Tansible3.0.exe -a config/test.yaml #运行的是config/test.yaml 中的配置
 5. 建议创建指定bat文件，关联action文件，以方便执行相关任务
-6. 单步运行模式增加 -s 选项如 cmd>Tansible.exe -s
+6. 单步运行模式增加 -s 选项如 cmd>Tansible3.0.exe -s
 7.  默认为单线程模式运行，可增加 -w 选项指定运行线程数，如 cmd>Tansible.exe -w 10
 
 #### hosts.yaml文件配置说明
@@ -64,6 +64,8 @@ PUBLIC:
     username: root
     # 密码
     password: password
+    # 连接超时时间，单位为秒，也可以不设置，默认为3秒
+    conn_timeout: 5 
 HOST:
   #  一般配置为主机名，如果有多用户则配置为主机名-用户名
   host1:
@@ -235,6 +237,7 @@ Tsftp:
 ```yaml
 # 该模块提供运程执行命令的功能，该模块执行命令的方式为paramiko_ssh.Connection.exec_command
 cmd: 'hostname'
+timeout: 10  #可选参数，默认为60秒，如果执行命令超过设定的值，则执行失败
 check: ['str','in','ture']     #可选参数[类型，运输符，检查值]，check参数为对cmd返回结果进行检查，类型支持str,int两种
                                # str支持==、in、not in、tail ==、tail not in、tail in 运算符，tail表示只对比最后一行的内容，int支持<, <=, ==, >=, >运输符
 例1：查看主机名
@@ -252,6 +255,7 @@ Tshell:
 ```yaml
 # 该模块提供运程执行命令的功能,该模块与Tshell模块功能相同，但该模块执行命令的方式为paramiko_ssh.Connection.exec_command_invoke_shell
 cmd: 'hostname'
+timeout: 10  #可选参数，默认为60秒，如果执行命令超过设定的值，则执行失败
 check: ['str','in','ture']     #可选参数[类型，运输符，检查值]，check参数为对cmd返回结果进行检查，类型支持str,int两种
                                # str支持==、in、not in、tail ==、tail not in、tail in ，tail表示只对比最后一行的内容，int支持<, <=, ==, >=, >运输符
 例1：查看主机名
