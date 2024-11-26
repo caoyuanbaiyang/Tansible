@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import json
+import lib.constants as C
 
 def check_success(mylog, stdout):
     mylog.info(f"检查成功：命令结果-{stdout}")
@@ -20,12 +21,13 @@ class ModelClass(object):
         self.hostname = hostname
         self.action_param = action_param
         self.host_param = host_param
+        self.exec_timeout = self.action_param.get("timeout", C.DEFAULT_COMMAND_EXEC_TIMEOUT)
 
     def action(self):
         json_result = {}
         if "cmd" not  in self.action_param:
             raise Exception('配置文件配置错误:必须包含cmd配置'.format(param=json.dumps(self.action_param)))
-        recv_exit_status, _, stdout, stderr = self.conn.exec_command(self.action_param["cmd"])
+        recv_exit_status, _, stdout, stderr = self.conn.exec_command(self.action_param["cmd"], exec_timeout=self.exec_timeout)
 
         if recv_exit_status != 0:
             self.mylog.error(f'执行失败：命令-{self.action_param["cmd"]}，错误信息-{stderr}')
@@ -82,7 +84,7 @@ class ModelClass(object):
         elif self.action_param["check"][0] == 'str':
             check_status = str(self.action_param["check"][2].strip())
             enter_return = str(stdout.strip('\n'))
-            enter_return_tail = str(stdout.split('\n')[-2])
+            enter_return_tail = str(enter_return.split('\n')[-3].strip())
             if self.action_param["check"][1].strip() not in ['==', 'in', 'not in', 'tail ==', 'tail in', 'tail not in']:
                 self.mylog.error(f'{self.action_param["check"][1]} mismatch !!!')
                 raise Exception("配置错误，运算符不匹配")
