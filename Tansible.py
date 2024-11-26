@@ -37,18 +37,18 @@ class Tansible(object):
             C.logger.debug(f"Thread ID: {threading.get_ident()}")
             host = self.hosts["HOST"][hostname]
             C.PackHost(self.hosts["PUBLIC"], host)
-
+            conn_timeout = host.get("conn_timeout")
             # 利用paramiko_ssh 连接主机
             conn = None
             if host["connect_type"] == 1:
                 # 密码连接
                 conn = paramiko_ssh.Connection(host=host["ip"], user=host["username"], conn_type=host["connect_type"],
-                                               password=host["password"]).connect()
+                                               password=host["password"],timeout=conn_timeout).connect()
             if host["connect_type"] == 2:
                 #  密钥连接
                 conn = paramiko_ssh.Connection(host=host["ip"], user=host["username"], conn_type=host["connect_type"],
                                                key_filename=host["key_filename"],
-                                               passphrase=host["passphrase"]).connect()
+                                               passphrase=host["passphrase"],timeout=conn_timeout).connect()
             # 模块翻译,如果在翻译列表中则用翻译后的重新赋值
             if modelname in C.MODULE_TRANS_DICT:
                 modelname = C.MODULE_TRANS_DICT[modelname]
