@@ -20,6 +20,10 @@ DEFAULT_ACTION_FILE = DEFAULT_CONFIG_DIR + "action.yaml"
 
 SYSTEM_NOTE_REGULAR_MATCH = r'.*~]\$ |.*~> |.*]\$ |.*\$ '
 
+DEFAULT_CONNECT_TIMEOUT = 3
+DEFAULT_COMMAND_EXEC_TIMEOUT = 60
+DEFAULT_SSH_END_PATTERN = r'[\$#>] $'
+
 current_time = datetime.datetime.now()
 formatted_time = current_time.strftime('%Y%m%d-%H%M%S')
 log_file = DEFAULT_LOG_DIR + "tansible"+formatted_time+".log"
