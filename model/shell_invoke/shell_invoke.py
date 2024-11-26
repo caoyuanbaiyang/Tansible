@@ -9,7 +9,7 @@ class ModelClass(TshellModelClass):
         json_result = {}
         if "cmd" not  in self.action_param:
             raise Exception('配置文件配置错误:必须包含cmd配置'.format(param=json.dumps(self.action_param)))
-        recv_exit_status, _, stdout, stderr = self.conn.exec_command_invoke_shell(self.action_param["cmd"])
+        recv_exit_status, _, stdout, stderr = self.conn.exec_command_invoke_shell(self.action_param["cmd"], exec_timeout=self.exec_timeout)
 
         if recv_exit_status != 0:
             self.mylog.error(f'执行失败：命令-{self.action_param["cmd"]}，错误信息-{stderr}')
