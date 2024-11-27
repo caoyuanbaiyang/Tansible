@@ -183,6 +183,7 @@ class Connection(object):
             if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
                 break
 
+        # 读取命令执行状态
         chan.send(f'echo $? \n')
         exit_stdout = ''
         while True:
@@ -192,9 +193,10 @@ class Connection(object):
                 exit_stdout += chan.recv(bufsize).decode('utf-8', errors='ignore')
 
             # 检查是否出现了提示符,如果出现了提示符，则认为命令执行完成，无须再循环获取了
-            if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
+            if re.search(end_pattern, exit_stdout):  # 假设提示符为 $, # 或 >
                 break
         exit_status = int(exit_stdout.strip().split('\n')[-2])
+
         return exit_status, '', stdout, stdout
 
     def exec_command_invoke_shell_1(self, cmd):
