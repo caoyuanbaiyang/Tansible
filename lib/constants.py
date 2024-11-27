@@ -31,7 +31,7 @@ log_file = DEFAULT_LOG_DIR + "tansible"+formatted_time+".log"
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
-logger = logger(log_file, clevel=logging.INFO, Flevel=logging.DEBUG)
+log = logger(log_file, clevel=logging.INFO, Flevel=logging.DEBUG)
 
 
 def system_match(line):
@@ -49,7 +49,7 @@ def decode_line(line):
         try:
             line = line.decode('GBK')
         except:
-            logger.error(f'decode utf-8/GBK error #{line}#')
+            log.error(f'decode utf-8/GBK error #{line}#')
             return ''
     return line
 
