@@ -33,8 +33,8 @@ class Tansible(object):
     def __action_func_inner(self, hostname, modelname, param):
         try:
             start_time = time.time()
-            C.logger.info(f"------模块:{modelname},主机:{hostname}")
-            C.logger.debug(f"Thread ID: {threading.get_ident()}")
+            C.log.info(f"------模块:{modelname},主机:{hostname}")
+            C.log.debug(f"Thread ID: {threading.get_ident()}")
             host = self.hosts["HOST"][hostname]
             C.PackHost(self.hosts["PUBLIC"], host)
             conn_timeout = host.get("conn_timeout")
@@ -54,7 +54,7 @@ class Tansible(object):
                 modelname = C.MODULE_TRANS_DICT[modelname]
 
             m = importlib.import_module("model." + modelname + "." + modelname)
-            result = m.ModelClass(C.logger, conn, hostname, param, host).action()
+            result = m.ModelClass(C.log, conn, hostname, param, host).action()
 
             end_time = time.time()
 
@@ -64,13 +64,13 @@ class Tansible(object):
             result["costtime"] = end_time - start_time
 
         except Exception as e:
-            C.logger.cri(f"执行失败: 错误信息-{e}")
+            C.log.cri(f"执行失败: 错误信息-{e}")
             result = {"status": "failed", "msg": "执行失败", "hostname": hostname, "modelname": modelname, "costtime": 0}
         finally:
             return result
 
     def run_multi_thread(self, hosts_obj):
-        C.logger.debug("多线程执行")
+        C.log.debug("多线程执行")
         futures = []
         with ThreadPoolExecutor(max_workers=self.max_workers) as t:
             # 根据action 配置文件的顺序开始执行，引入多线程方式
@@ -83,16 +83,16 @@ class Tansible(object):
                     # 按调用的模块依次执行
                     for modelname, param in task.items():
                         if modelname == "name":
-                            C.logger.info(f'*********执行任务：{task["name"]}*********')
+                            C.log.info(f'*********执行任务：{task["name"]}*********')
                             continue
                         if modelname == "GetHostList":
-                            C.logger.info(f"主机列表：{hostname_list}")
+                            C.log.info(f"主机列表：{hostname_list}")
                             continue
                         if modelname == "BreakPoint":
                             # 等待所有线程完成
-                            C.logger.info("等待所有线程执行完成...")
+                            C.log.info("等待所有线程执行完成...")
                             concurrent.futures.wait(futures)
-                            C.logger.info("所有线程执行完成")
+                            C.log.info("所有线程执行完成")
                             continue
                         # 每个模块都要对所有设置的主机去执行，因此此处遍历所有主机去调用模块动作
                         for hostname in hostname_list:
@@ -101,7 +101,7 @@ class Tansible(object):
             self.result.append(future.result(timeout=120))
 
     def run_single_thread(self, hosts_obj):
-        C.logger.debug("单线程执行")
+        C.log.debug("单线程执行")
         # 每个action 就是 - hosts: 开头的部分内容，这就是每个action的配置
         for action in self.actions["ACTION"]:
             # 根据hosts:ALL 配置获取所有主机名的列表
@@ -111,10 +111,10 @@ class Tansible(object):
                 # 按调用的模块依次执行
                 for modelname, param in task.items():
                     if modelname == "name":
-                        C.logger.info(f'*********执行任务：{task["name"]}*********')
+                        C.log.info(f'*********执行任务：{task["name"]}*********')
                         continue
                     if modelname == "GetHostList":
-                        C.logger.info(f"主机列表：{hostname_list}")
+                        C.log.info(f"主机列表：{hostname_list}")
                         continue
                     if modelname == "BreakPoint":
                         # 单线程运行模式下，支持断点模块，该模块下，每个主机都会暂停
@@ -131,16 +131,16 @@ class Tansible(object):
     def action_func(self):
         start_time = time.time()
         # 检查hosts 配置是否有错误的，如果有错误，则不运行
-        hosts_obj = host_func.hosts(C.logger, self.groups, self.hosts)
+        hosts_obj = host_func.hosts(C.log, self.groups, self.hosts)
         check, err_list = host_func.check_action_hostcfg(self.actions, hosts_obj)
 
         if not check:
-            C.logger.cri(f"action 配置文件中hosts配置错误，hosts.yaml无相关配置：{err_list}")
+            C.log.cri(f"action 配置文件中hosts配置错误，hosts.yaml无相关配置：{err_list}")
             raise Exception("action 配置文件hosts配置错误")
 
         C.adjust_window_size()
 
-        C.logger.green(f'############开始任务{self.actions_file_name}############')
+        C.log.green(f'############开始任务{self.actions_file_name}############')
         if self.max_workers > 1:
             self.run_multi_thread(hosts_obj)
         else:
@@ -149,9 +149,9 @@ class Tansible(object):
         # 执行完毕后，对执行结果进行统计
         self.statistics_result()
         end_time = time.time()
-        C.logger.info('')
-        C.logger.info(f"time cost:{end_time - start_time:.2f} seconds")
-        C.logger.green(f'############任务{self.actions_file_name}执行完成############')
+        C.log.info('')
+        C.log.info(f"time cost:{end_time - start_time:.2f} seconds")
+        C.log.green(f'############任务{self.actions_file_name}执行完成############')
         self.dump_result_file()
 
     def statistics_result(self):
@@ -163,27 +163,27 @@ class Tansible(object):
                 success_count += 1
             else:
                 failed_count += 1
-        C.logger.info('')
-        C.logger.info('PLAY RECAP******************************************************************************')
+        C.log.info('')
+        C.log.info('PLAY RECAP******************************************************************************')
         # 打印执行结果详细信息
-        C.logger.info('')
+        C.log.info('')
         status, modelname, hostname, costtime = "执行结果",  "模块名", "主机名", "执行秒数"
-        C.logger.info(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}')
+        C.log.info(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}')
         for k in self.result:
             if k['status'] == 'success':
-                C.logger.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
+                C.log.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
             else:
-                C.logger.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
+                C.log.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
 
         if success_count > 0:
-            C.logger.green(f'成功执行{success_count}个任务')
+            C.log.green(f'成功执行{success_count}个任务')
         if failed_count > 0:
-            C.logger.error(f'失败执行{failed_count}个任务')
+            C.log.error(f'失败执行{failed_count}个任务')
             
     def dump_result_file(self):
         # 将执行结果写入到结果文件
         result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.log"
-        C.logger.debug("self.result长度：" + str(len(self.result)))
+        C.log.debug("self.result长度：" + str(len(self.result)))
         with open(result_file, mode='w',encoding="utf-8",errors='ignore') as f:
             status, modelname, hostname, costtime, msg = "执行结果", "模块名", "主机名", "执行秒数", "返回结果"
             f.write(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}    {msg}\n')
