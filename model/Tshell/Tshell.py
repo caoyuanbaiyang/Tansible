@@ -84,7 +84,7 @@ class ModelClass(object):
         elif self.action_param["check"][0] == 'str':
             check_status = str(self.action_param["check"][2].strip())
             enter_return = str(stdout.strip('\n'))
-            enter_return_tail = str(enter_return.split('\n')[-3].strip())
+            enter_return_tail = str(enter_return.split('\n')[-2].strip())
             if self.action_param["check"][1].strip() not in ['==', 'in', 'not in', 'tail ==', 'tail in', 'tail not in']:
                 self.mylog.error(f'{self.action_param["check"][1]} mismatch !!!')
                 raise Exception("配置错误，运算符不匹配")
