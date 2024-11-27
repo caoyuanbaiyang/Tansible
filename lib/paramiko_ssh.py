@@ -117,7 +117,7 @@ class Connection(object):
             quoted_command = executable + ' -c ' + pipes.quote(cmd)
         else:
             quoted_command = cmd
-        C.logger.debug(f"EXEC {quoted_command} at {self.host}")
+        C.log.debug(f"EXEC {quoted_command} at {self.host}")
         chan.exec_command(quoted_command)
 
         stdout = []
@@ -161,9 +161,9 @@ class Connection(object):
         '''
         bufsize = 65536
         chan = self.ssh.invoke_shell()
-        chan.send(cmd + '\n')
+        chan.send(f'{cmd}  \n')
         chan.settimeout(chan_timeout)
-        C.logger.debug(f"EXEC {cmd} at {self.host}")
+        C.log.debug(message=f"EXEC {cmd} at {self.host}")
         # 读取输出直到命令完成
         stdout = ''
         start_time = time.time()
@@ -183,9 +183,19 @@ class Connection(object):
             if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
                 break
 
-        exit_status = chan.recv_exit_status()
+        chan.send(f'echo $? \n')
+        exit_stdout = ''
+        while True:
+            time.sleep(0.2)  # 短暂等待
 
-        return exit_status, '', stdout, ''
+            if chan.recv_ready():
+                exit_stdout += chan.recv(bufsize).decode('utf-8', errors='ignore')
+
+            # 检查是否出现了提示符,如果出现了提示符，则认为命令执行完成，无须再循环获取了
+            if re.search(end_pattern, stdout):  # 假设提示符为 $, # 或 >
+                break
+        exit_status = int(exit_stdout.strip().split('\n')[-2])
+        return exit_status, '', stdout, stdout
 
     def exec_command_invoke_shell_1(self, cmd):
         """ run a command on the remote host """
@@ -194,7 +204,7 @@ class Connection(object):
         stdin = channel.makefile('wb')
         stdout = channel.makefile('rb')
         channel.send("export LANG=en_US.UTF-8 \n")
-        C.logger.debug(f"EXEC {cmd} at {self.host}")
+        C.log.debug(f"EXEC {cmd} at {self.host}")
         exit_status, _, stdout, stderr = execute(cmd, stdin, stdout)
         return exit_status, '', ''.join(stdout), ''.join(stderr)
 
@@ -238,7 +248,7 @@ class Connection(object):
             time.sleep(0.2)
             command_timeout = command_timeout + 0.2
             if command_timeout > timeout:
-                C.logger.error(f'执行命令{command}超时{timeout}')
+                C.log.error(f'执行命令{command}超时{timeout}')
                 raise Exception(f'执行命令{command}超时{timeout}')
             success = False
             channel.recv_ready()
@@ -286,7 +296,7 @@ class Connection(object):
 
     def put_file(self, in_path, out_path):
         """ transfer a file from local to remote """
-        C.logger.debug("PUT %s TO %s" % (in_path, out_path))
+        C.log.debug("PUT %s TO %s" % (in_path, out_path))
         if not os.path.exists(in_path):
             raise Exception("file or module does not exist: %s" % in_path)
         try:
@@ -317,16 +327,16 @@ class Connection(object):
                     self.sftp.mkdir(rmt_dir)
                 except:
                     pass
-                C.logger.debug(r'Put文件夹 %s 传输中...' % loc_path_filename)
+                C.log.debug(r'Put文件夹 %s 传输中...' % loc_path_filename)
                 self.put_dir(remote_dir=rmt_dir, local_dir=loc_path_filename, excludes=excludes)
             else:
                 remote_filename = Path(os.path.join(remote_dir, file)).as_posix()
-                C.logger.debug(r'  Put文件  %s 传输中...' % loc_path_filename)
-                C.logger.debug(r'     位置  {file} 传输中...'.format(file=remote_filename))
+                C.log.debug(r'  Put文件  %s 传输中...' % loc_path_filename)
+                C.log.debug(r'     位置  {file} 传输中...'.format(file=remote_filename))
                 try:
                     self.put_file(loc_path_filename, remote_filename)
                 except Exception as e:
-                    C.logger.error(
+                    C.log.error(
                         f"Pet文件 {loc_path_filename},{remote_filename} 失败! msg-{e}")
                     err_list.append(loc_path_filename)
 
@@ -366,7 +376,7 @@ class Connection(object):
 
             # 如果判断为无需下载的文件，则跳过本次循环，处理下一个文件名词
             if C.exclude_files(file.filename, remote_path_filename, excludes):
-                C.logger.debug('忽略文件%s' % remote_path_filename)
+                C.log.debug('忽略文件%s' % remote_path_filename)
                 continue
 
             # 如果是目录，则递归处理该目录，远端通过stat.S_ISDIR(st_mode)
@@ -375,16 +385,16 @@ class Connection(object):
                 if not os.path.exists(tmp_local_dir):
                     os.makedirs(tmp_local_dir)
                 self.fetch_dir(local_dir=tmp_local_dir, remote_dir=remote_path_filename, excludes=excludes)
-                C.logger.debug('Get文件夹%s 传输中...' % remote_path_filename)
-                C.logger.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
+                C.log.debug('Get文件夹%s 传输中...' % remote_path_filename)
+                C.log.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_dir))
             else:
                 tmp_local_filename = os.path.join(local_dir, file.filename)
                 try:
-                    C.logger.debug('  Get文件  %s 传输中...' % remote_path_filename)
-                    C.logger.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
+                    C.log.debug('  Get文件  %s 传输中...' % remote_path_filename)
+                    C.log.debug('   位置  {loc_dir}:'.format(loc_dir=tmp_local_filename))
                     self.fetch_file(remote_path_filename, tmp_local_filename)
                 except Exception as e:
-                    C.logger.error(
+                    C.log.error(
                         f"Get文件 {remote_path_filename},{tmp_local_filename} 失败! msg-{e}")
                     err_list.append(remote_path_filename)
 
