@@ -30,7 +30,7 @@ class Tansible(object):
         # 初始化函数
         pass
 
-    def __action_func_inner(self, hostname, modelname, param):
+    def __action_func_inner(self, taskname, hostname, modelname, param):
         try:
             start_time = time.time()
             C.log.info(f"------模块:{modelname},主机:{hostname}")
@@ -59,13 +59,14 @@ class Tansible(object):
             end_time = time.time()
 
             # 补充模块信息和主机信息
+            result["taskname"] = taskname
             result["hostname"] = hostname
             result["modelname"] = modelname
             result["costtime"] = end_time - start_time
 
         except Exception as e:
             C.log.cri(f"执行失败: 错误信息-{e}")
-            result = {"status": "failed", "msg": "执行失败", "hostname": hostname, "modelname": modelname, "costtime": 0}
+            result = {"status": "failed", "msg": "执行失败", "taskname": taskname, "hostname": hostname, "modelname": modelname, "costtime": 0}
         finally:
             return result
 
@@ -81,9 +82,11 @@ class Tansible(object):
                 # 遍历task列表，每个task 开头 - 模块名称 或者 - name:任务说明
                 for task in action["tasks"]:
                     # 按调用的模块依次执行
+                    taskname = ""
                     for modelname, param in task.items():
                         if modelname == "name":
-                            C.log.info(f'*********执行任务：{task["name"]}*********')
+                            taskname= task["name"]
+                            C.log.info(f'*********执行任务：{taskname}*********')
                             continue
                         if modelname == "GetHostList":
                             C.log.info(f"主机列表：{hostname_list}")
@@ -96,7 +99,7 @@ class Tansible(object):
                             continue
                         # 每个模块都要对所有设置的主机去执行，因此此处遍历所有主机去调用模块动作
                         for hostname in hostname_list:
-                            futures.append(t.submit(self.__action_func_inner, hostname, modelname, param))
+                            futures.append(t.submit(self.__action_func_inner, taskname, hostname, modelname, param))
         for future in futures:
             self.result.append(future.result(timeout=120))
 
@@ -109,9 +112,11 @@ class Tansible(object):
             # 遍历task列表，每个task 开头 - 模块名称 或者 - name:任务说明
             for task in action["tasks"]:
                 # 按调用的模块依次执行
+                taskname = ""
                 for modelname, param in task.items():
                     if modelname == "name":
-                        C.log.info(f'*********执行任务：{task["name"]}*********')
+                        taskname = task["name"]
+                        C.log.info(f'*********执行任务：{taskname}*********')
                         continue
                     if modelname == "GetHostList":
                         C.log.info(f"主机列表：{hostname_list}")
@@ -122,7 +127,7 @@ class Tansible(object):
                         continue
                     # 每个模块都要对所有设置的主机去执行，因此此处遍历所有主机去调用模块动作
                     for hostname in hostname_list:
-                        run_result = self.__action_func_inner(hostname, modelname, param)
+                        run_result = self.__action_func_inner(taskname, hostname, modelname, param)
                         # 将主机、模块运行的结果run_result 存入self.result中
                         self.result.append(run_result)
                         if self.step_by_step:
@@ -167,13 +172,13 @@ class Tansible(object):
         C.log.info('PLAY RECAP******************************************************************************')
         # 打印执行结果详细信息
         C.log.info('')
-        status, modelname, hostname, costtime = "执行结果",  "模块名", "主机名", "执行秒数"
-        C.log.info(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}')
+        status, taskname, modelname, hostname, costtime = "执行结果", "任务", "模块名", "主机名", "执行秒数"
+        C.log.info(f'{status:15s}{taskname:25s}{modelname:25s}{hostname:25s}{costtime}')
         for k in self.result:
             if k['status'] == 'success':
-                C.log.green(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
+                C.log.green(f"{k['status']:15s}{k['taskname']:25s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
             else:
-                C.log.info(f"{k['status']:15s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
+                C.log.info(f"{k['status']:15s}{k['taskname']:25s}{k['modelname']:25s}{k['hostname']:25s}{k['costtime']:.0f}")
 
         if success_count > 0:
             C.log.green(f'成功执行{success_count}个任务')
@@ -185,10 +190,10 @@ class Tansible(object):
         result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.log"
         C.log.debug("self.result长度：" + str(len(self.result)))
         with open(result_file, mode='w',encoding="utf-8",errors='ignore') as f:
-            status, modelname, hostname, costtime, msg = "执行结果", "模块名", "主机名", "执行秒数", "返回结果"
-            f.write(f'{status:15s}{modelname:25s}{hostname:25s}{costtime}    {msg}\n')
+            status,taskname, modelname, hostname, costtime, msg = "执行结果", "任务", "模块名", "主机名", "执行秒数", "返回结果"
+            f.write(f'{status:15s}{taskname:25s}{modelname:25s}{hostname:25s}{costtime}    {msg}\n')
             for result in self.result:
-                content = f"{result['status']:15s}{result['modelname']:25s}{result['hostname']:25s}{result['costtime']:5.0f}    {result['msg']}"
+                content = f"{result['status']:15s}{result['taskname']:25s}{result['modelname']:25s}{result['hostname']:25s}{result['costtime']:5.0f}    {result['msg']}"
                 if not content.endswith("\n"):
                     content = content + "\n"
                 f.write(content)
