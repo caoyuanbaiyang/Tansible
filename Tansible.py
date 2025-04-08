@@ -2,6 +2,7 @@ import importlib
 import os.path
 import threading
 import time
+import webbrowser
 
 import lib.constants as C
 import lib.hosts as host_func
@@ -65,8 +66,10 @@ class Tansible(object):
             result["costtime"] = end_time - start_time
 
         except Exception as e:
+            end_time = time.time()
+            costtime = end_time - start_time
             C.log.cri(f"执行失败: 错误信息-{e}")
-            result = {"status": "failed", "msg": "执行失败", "taskname": taskname, "hostname": hostname, "modelname": modelname, "costtime": 0}
+            result = {"status": "failed", "msg": f"执行失败-{e}", "taskname": taskname, "hostname": hostname, "modelname": modelname, "costtime": costtime}
         finally:
             return result
 
@@ -158,6 +161,7 @@ class Tansible(object):
         C.log.info(f"time cost:{end_time - start_time:.2f} seconds")
         C.log.green(f'############任务{self.actions_file_name}执行完成############')
         self.dump_result_file()
+        self.dump_result_to_html()
 
     def statistics_result(self):
         # 统计执行结果
@@ -198,3 +202,44 @@ class Tansible(object):
                     content = content + "\n"
                 f.write(content)
 
+    # 将执行结果导出为 HTML 文件
+    def dump_result_to_html(self):
+        # 将执行结果写入到结果文件
+        result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.html"
+        C.log.debug("self.result长度：" + str(len(self.result)))
+
+        # 读取模板文件
+        with open('template.html', 'r', encoding='utf-8') as template_file:
+            template = template_file.read()
+
+        table_rows = ""
+        for result in self.result:
+            # 将换行符替换为 HTML 换行标签
+            msg_with_br = result['msg'].replace('\n', '<br>')
+            row_class = "failed-row" if result['status'] == 'failed' else ""
+            table_rows += f"""
+                <tr class="{row_class}">
+                    <td style="white-space: nowrap">{result['status']}</td>
+                    <td style="white-space: nowrap">{result['taskname']}</td>
+                    <td style="white-space: nowrap">{result['modelname']}</td>
+                    <td style="white-space: nowrap">{result['hostname']}</td>
+                    <td style="white-space: nowrap">{result['costtime']:.0f}</td>
+                    <td style="white-space: normal">{msg_with_br}</td>
+                </tr>
+            """
+
+        # 渲染模板
+        html_content = template.replace('{{table_rows}}', table_rows)
+
+        # 写入 HTML 文件
+        with open(result_file, mode='w', encoding="utf-8", errors='ignore') as f:
+            f.write(html_content)
+
+        C.log.info(f"执行结果已导出到 {result_file}")
+
+        # 打开 HTML 文件
+        try:
+            file_url = 'file://' + os.path.abspath(result_file)
+            webbrowser.open(file_url)
+        except Exception as e:
+            C.log.error(f"无法在浏览器中打开 {result_file}: {e}")

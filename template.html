@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <title>Tansible执行结果</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f4f4f9;
+            color: #333;
+            line-height: 1.5;
+            letter-spacing: 0.02em;
+        }
+        .container {
+            max-width: 2500px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        h1 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 2rem;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: #fff;
+        }
+        th, td {
+            border: 1px solid #e2e8f0;
+            padding: 1rem;
+            text-align: left;
+        }
+        th {
+            background-color: #edf2f7;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+        }
+        tr:nth-child(even) {
+            background-color: #f7fafc;
+        }
+        tr:hover {
+            background-color: #edf2f7;
+            transition: background-color 0.3s ease;
+        }
+         /* 执行结果为 failed 的行显示红色背景 */
+        .failed-row {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Tansible执行结果</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%">执行结果</th>
+                    <th style="width: 15%">任务</th>
+                    <th style="width: 10%">模块名</th>
+                    <th style="width: 15%">主机名</th>
+                    <th style="width: 5%">执行秒数</th>
+                    <th style="width: 50%">返回结果</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{table_rows}}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>    
