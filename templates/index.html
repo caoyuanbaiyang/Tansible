@@ -16,12 +16,14 @@
         }
 
         .container {
-            max-width: 600px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 2rem;
             background-color: #fff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-radius: 0.375rem;
+            display: flex;
+            gap: 2rem;
         }
 
         h1 {
@@ -35,19 +37,21 @@
         form {
             display: flex;
             flex-direction: column;
+            flex: 1;
         }
 
         label {
             font-weight: 600;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.25rem;
         }
 
         input[type="text"],
         input[type="number"] {
-            margin-bottom: 1.5rem;
-            padding: 0.5rem;
+            margin-bottom: 1rem;
+            padding: 0.75rem;
             border: 1px solid #e2e8f0;
             border-radius: 0.375rem;
+            width: 100%;
         }
 
         input[type="submit"] {
@@ -63,32 +67,162 @@
         input[type="submit"]:hover {
             background-color: #3182ce;
         }
+
+        .error {
+            color: red;
+            margin-top: -0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .file-browser {
+            flex: 1;
+        }
+
+        .transfer-btn {
+            margin-right: 0.5rem;
+            cursor: pointer;
+        }
+
+        #file-list {
+            height: 600px;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            padding: 0.5rem;
+            overflow-y: auto;
+        }
+
+        .tree {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+
+        .tree li {
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+
+        .tree li.directory::before {
+            content: '📁 ';
+        }
+
+        .tree li.file::before {
+            content: '📄 ';
+        }
+
+        .tree li.selected {
+            background-color: #e2f0ff;
+        }
+
+        .tree li ul {
+            display: none;
+        }
+
+        .tree li.expanded > ul {
+            display: block;
+        }
     </style>
+    <script>
+        let selectedFilePath = '';
+
+        function transferFilePath(inputId) {
+            const input = document.getElementById(inputId);
+            input.value = selectedFilePath;
+        }
+
+        function selectFile(path) {
+            const selectedLi = document.querySelector('.tree li.selected');
+            if (selectedLi) {
+                selectedLi.classList.remove('selected');
+            }
+            const newSelectedLi = document.querySelector(`.tree li[data-path="${path}"]`);
+            if (newSelectedLi) {
+                newSelectedLi.classList.add('selected');
+            }
+            selectedFilePath = path;
+        }
+
+        function toggleFolder(li) {
+            li.classList.toggle('expanded');
+        }
+
+        function renderTree(tree, parentElement, basePath = '') {
+            const ul = document.createElement('ul');
+            ul.classList.add('tree');
+            tree.forEach(item => {
+                const li = document.createElement('li');
+                li.classList.add(item.type);
+                const fullPath = basePath ? `${basePath}/${item.name}` : item.name;
+                li.textContent = item.name;
+                li.setAttribute('data-path', fullPath);
+                li.addEventListener('click', (event) => {
+                    if (item.type === 'file') {
+                        selectFile(fullPath);
+                        event.stopPropagation();
+                    } else if (item.type === 'directory') {
+                        toggleFolder(li);
+                    }
+                });
+                if (item.children) {
+                    renderTree(item.children, li, fullPath);
+                }
+                ul.appendChild(li);
+            });
+            parentElement.appendChild(ul);
+        }
+
+        window.onload = async () => {
+            const response = await fetch('/get_config_tree');
+            const tree = await response.json();
+            const fileList = document.getElementById('file-list');
+            renderTree(tree, fileList);
+        };
+    </script>
 </head>
 
 <body>
     <div class="container">
-        <h1>输入文件路径和线程数</h1>
+        <div class="file-browser">
+            <div id="file-list"></div>
+        </div>
         <form method="post">
-            <label for="host_file_path">输入主机文件路径</label>
-            <input type="text" id="host_file_path" name="host_file_path"
-                   value="{{ host_file_path if host_file_path else default_hosts_file }}">
-
-            <label for="group_file_path">输入群组文件路径</label>
-            <input type="text" id="group_file_path" name="group_file_path"
-                   value="{{ group_file_path if group_file_path else default_groups_file }}">
-
-            <label for="action_file_path">输入动作文件路径</label>
-            <input type="text" id="action_file_path" name="action_file_path"
-                   value="{{ action_file_path if action_file_path else default_action_file }}">
-
-            <label for="max_workers">并发执行的线程数</label>
-            <input type="number" id="max_workers" name="max_workers" min="1"
-                   value="{{ max_workers if max_workers else 1 }}">
-
+            <div>
+                <span class="transfer-btn" onclick="transferFilePath('host_file_path')">></span>
+                <label for="host_file_path">输入主机文件路径</label>
+                <input type="text" id="host_file_path" name="host_file_path"
+                    value="{{ host_file_path if host_file_path else default_hosts_file }}">
+                {% if error_messages.get('hosts_config_file') %}
+                <span class="error">{{ error_messages.hosts_config_file }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <span class="transfer-btn" onclick="transferFilePath('group_file_path')">></span>
+                <label for="group_file_path">输入群组文件路径</label>
+                <input type="text" id="group_file_path" name="group_file_path"
+                    value="{{ group_file_path if group_file_path else default_groups_file }}">
+                {% if error_messages.get('groups_config_file') %}
+                <span class="error">{{ error_messages.groups_config_file }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <span class="transfer-btn" onclick="transferFilePath('action_file_path')">></span>
+                <label for="action_file_path">输入动作文件路径</label>
+                <input type="text" id="action_file_path" name="action_file_path"
+                    value="{{ action_file_path if action_file_path else default_action_file }}">
+                {% if error_messages.get('action_file') %}
+                <span class="error">{{ error_messages.action_file }}</span>
+                {% endif %}
+            </div>
+            <div>
+                <label for="max_workers">并发执行的线程数</label>
+                <input type="number" id="max_workers" name="max_workers" min="1"
+                    value="{{ max_workers if max_workers else 1 }}">
+                {% if error_messages.get('workers') %}
+                <span class="error">{{ error_messages.workers }}</span>
+                {% endif %}
+            </div>
             <input type="submit" value="运行">
         </form>
     </div>
 </body>
 
-</html>    
+</html>
