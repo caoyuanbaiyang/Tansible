@@ -9,6 +9,7 @@ from lib.constants import DEFAULT_HOSTS_FILE, DEFAULT_ACTION_FILE, DEFAULT_GROUP
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
+
 def args_check(action_file, hosts_config_file, groups_config_file, workers, run_step_by_step=False):
     error_messages = {
         'action_file': '',
@@ -25,6 +26,7 @@ def args_check(action_file, hosts_config_file, groups_config_file, workers, run_
     if run_step_by_step and workers > 1:
         error_messages['workers'] = "-s option only can be used in single thread mode"
     return error_messages
+
 
 def get_directory_tree(path):
     tree = []
@@ -44,11 +46,13 @@ def get_directory_tree(path):
             })
     return tree
 
+
 @app.route('/get_config_tree', methods=['GET'])
 def get_config_tree():
     config_path = '.'  # 假设 config 目录在项目根目录下
     tree = get_directory_tree(config_path)
     return jsonify(tree)
+
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -68,11 +72,31 @@ def index():
             error_messages = args_check(action_file_path, host_file_path, group_file_path, max_workers)
             if any(error_messages.values()):
                 session['error_messages'] = error_messages
-                return index()
+                template_data = {
+                    'default_hosts_file': DEFAULT_HOSTS_FILE,
+                    'default_action_file': DEFAULT_ACTION_FILE,
+                    'default_groups_file': DEFAULT_GROUPS_FILE,
+                    'host_file_path': host_file_path,
+                    'group_file_path': group_file_path,
+                    'action_file_path': action_file_path,
+                    'max_workers': max_workers,
+                    'error_messages': error_messages
+                }
+                return render_template('index.html', **template_data)
         except ValueError as e:
             error_message = str(e)
             session['error_messages'] = {'workers': error_message}
-            return index()
+            template_data = {
+                'default_hosts_file': DEFAULT_HOSTS_FILE,
+                'default_action_file': DEFAULT_ACTION_FILE,
+                'default_groups_file': DEFAULT_GROUPS_FILE,
+                'host_file_path': host_file_path,
+                'group_file_path': group_file_path,
+                'action_file_path': action_file_path,
+                'max_workers': max_workers,
+                'error_messages': session['error_messages']
+            }
+            return render_template('index.html', **template_data)
 
         if host_file_path and group_file_path and action_file_path:
             try:
@@ -84,7 +108,12 @@ def index():
                 )
                 tansible.action_func()
                 result = tansible.result
-                return render_template('result.html', result=result)
+                # 传递参数到结果页面
+                return render_template('result.html', result=result,
+                                       host_file_path=host_file_path,
+                                       group_file_path=group_file_path,
+                                       action_file_path=action_file_path,
+                                       max_workers=max_workers)
             except Exception as e:
                 error_message = f"Tansible 任务执行失败，错误信息：{str(e)}"
                 return render_template('result.html', error=error_message)
@@ -110,8 +139,10 @@ def index():
     }
     return render_template('index.html', **template_data)
 
+
 def open_browser(host, port):
     webbrowser.open_new(f'http://{host}:{port}/')
+
 
 if __name__ == '__main__':
     host = '127.0.0.1'

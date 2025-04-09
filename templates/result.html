@@ -101,11 +101,11 @@
     <div class="container">
         <h1>Tansible 执行结果</h1>
         <div class="input-info">
-            <h2>输入信息</h2>
+            <h2 class="text-xl font-bold mb-2">执行参数</h2>
             <p><strong>主机文件路径:</strong> {{ host_file_path }}</p>
             <p><strong>群组文件路径:</strong> {{ group_file_path }}</p>
             <p><strong>动作文件路径:</strong> {{ action_file_path }}</p>
-            <p><strong>并发线程数:</strong> {{ max_workers if max_workers else '未输入' }}</p>
+            <p><strong>并发线程数:</strong> {{ max_workers }}</p>
         </div>
         {% if error %}
         <p class="error">{{ error }}</p>
@@ -139,4 +139,4 @@
     </div>
 </body>
 
-</html>    
+</html>
