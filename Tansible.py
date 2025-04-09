@@ -202,7 +202,7 @@ class Tansible(object):
                 f.write(content)
 
     # 将执行结果导出为 HTML 文件
-    def dump_result_to_html(self):
+    def dump_result_to_html(self, show=True):
         # 将执行结果写入到结果文件
         result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.html"
         C.log.debug("self.result长度：" + str(len(self.result)))
@@ -237,8 +237,9 @@ class Tansible(object):
         C.log.info(f"执行结果已导出到 {result_file}")
 
         # 打开 HTML 文件
-        try:
-            file_url = 'file://' + os.path.abspath(result_file)
-            webbrowser.open(file_url)
-        except Exception as e:
-            C.log.error(f"无法在浏览器中打开 {result_file}: {e}")
+        if show:
+            try:
+                file_url = 'file://' + os.path.abspath(result_file)
+                webbrowser.open(file_url)
+            except Exception as e:
+                C.log.error(f"无法在浏览器中打开 {result_file}: {e}")

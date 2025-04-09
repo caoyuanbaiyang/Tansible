@@ -107,6 +107,7 @@ def index():
                     max_workers=max_workers
                 )
                 tansible.action_func()
+                tansible.dump_result_to_html(show=False)
                 result = tansible.result
                 # 传递参数到结果页面
                 return render_template('result.html', result=result,
