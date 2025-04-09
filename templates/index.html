@@ -160,6 +160,7 @@
                         event.stopPropagation();
                     } else if (item.type === 'directory') {
                         toggleFolder(li);
+                        event.stopPropagation(); // 阻止事件冒泡
                     }
                 });
                 if (item.children) {
