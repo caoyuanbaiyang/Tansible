@@ -146,7 +146,6 @@ class Tansible(object):
             C.log.cri(f"action 配置文件中hosts配置错误，hosts.yaml无相关配置：{err_list}")
             raise Exception("action 配置文件hosts配置错误")
 
-        C.adjust_window_size()
 
         C.log.green(f'############开始任务{self.actions_file_name}############')
         if self.max_workers > 1:
@@ -160,8 +159,8 @@ class Tansible(object):
         C.log.info('')
         C.log.info(f"time cost:{end_time - start_time:.2f} seconds")
         C.log.green(f'############任务{self.actions_file_name}执行完成############')
-        self.dump_result_file()
-        self.dump_result_to_html()
+        # self.dump_result_file()
+        # self.dump_result_to_html()
 
     def statistics_result(self):
         # 统计执行结果
