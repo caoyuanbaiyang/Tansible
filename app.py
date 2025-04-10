@@ -67,25 +67,11 @@ def index():
         session['action_file_path'] = action_file_path
         session['max_workers'] = max_workers
 
-        try:
-            max_workers = int(max_workers) if max_workers else 1
-            error_messages = args_check(action_file_path, host_file_path, group_file_path, max_workers)
-            if any(error_messages.values()):
-                session['error_messages'] = error_messages
-                template_data = {
-                    'default_hosts_file': DEFAULT_HOSTS_FILE,
-                    'default_action_file': DEFAULT_ACTION_FILE,
-                    'default_groups_file': DEFAULT_GROUPS_FILE,
-                    'host_file_path': host_file_path,
-                    'group_file_path': group_file_path,
-                    'action_file_path': action_file_path,
-                    'max_workers': max_workers,
-                    'error_messages': error_messages
-                }
-                return render_template('index.html', **template_data)
-        except ValueError as e:
-            error_message = str(e)
-            session['error_messages'] = {'workers': error_message}
+
+        max_workers = int(max_workers) if max_workers else 1
+        error_messages = args_check(action_file_path, host_file_path, group_file_path, max_workers)
+        if any(error_messages.values()):
+            session['error_messages'] = error_messages
             template_data = {
                 'default_hosts_file': DEFAULT_HOSTS_FILE,
                 'default_action_file': DEFAULT_ACTION_FILE,
@@ -94,11 +80,10 @@ def index():
                 'group_file_path': group_file_path,
                 'action_file_path': action_file_path,
                 'max_workers': max_workers,
-                'error_messages': session['error_messages']
+                'error_messages': error_messages
             }
             return render_template('index.html', **template_data)
-
-        if host_file_path and group_file_path and action_file_path:
+        else:
             try:
                 tansible = Tansible(
                     actions_file=action_file_path,
@@ -118,27 +103,28 @@ def index():
             except Exception as e:
                 error_message = f"Tansible 任务执行失败，错误信息：{str(e)}"
                 return render_template('result.html', error=error_message)
-        else:
-            error_message = "请输入所有必要的文件路径。"
-            return render_template('result.html', error=error_message)
 
-    host_file_path = session.get('host_file_path', DEFAULT_HOSTS_FILE)
-    group_file_path = session.get('group_file_path', DEFAULT_GROUPS_FILE)
-    action_file_path = session.get('action_file_path', DEFAULT_ACTION_FILE)
-    max_workers = session.get('max_workers', 1)
-    error_messages = session.pop('error_messages', {})
+    else:
+        # 当请求方法为 GET 时，清除会话中的错误信息
+        session.pop('error_messages', None)
 
-    template_data = {
-        'default_hosts_file': DEFAULT_HOSTS_FILE,
-        'default_action_file': DEFAULT_ACTION_FILE,
-        'default_groups_file': DEFAULT_GROUPS_FILE,
-        'host_file_path': host_file_path,
-        'group_file_path': group_file_path,
-        'action_file_path': action_file_path,
-        'max_workers': max_workers,
-        'error_messages': error_messages
-    }
-    return render_template('index.html', **template_data)
+        host_file_path = session.get('host_file_path', DEFAULT_HOSTS_FILE)
+        group_file_path = session.get('group_file_path', DEFAULT_GROUPS_FILE)
+        action_file_path = session.get('action_file_path', DEFAULT_ACTION_FILE)
+        max_workers = session.get('max_workers', 1)
+        error_messages = {}
+
+        template_data = {
+            'default_hosts_file': DEFAULT_HOSTS_FILE,
+            'default_action_file': DEFAULT_ACTION_FILE,
+            'default_groups_file': DEFAULT_GROUPS_FILE,
+            'host_file_path': host_file_path,
+            'group_file_path': group_file_path,
+            'action_file_path': action_file_path,
+            'max_workers': max_workers,
+            'error_messages': error_messages
+        }
+        return render_template('index.html', **template_data)
 
 
 def open_browser(host, port):
