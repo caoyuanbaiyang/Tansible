@@ -70,8 +70,8 @@
 
         .error {
             color: red;
-            margin-top: -0.75rem;
-            margin-bottom: 1rem;
+            min-height: 1.5rem;
+            display: block;
         }
 
         .file-browser {
@@ -135,7 +135,7 @@
             display: flex;
             flex-direction: column;
             justify-content: start;
-            gap: 1.35rem;
+            gap: 2.9rem;
             padding-top: 1.6rem;
             /*padding-top: calc(1.85rem - 2px);  让按钮上移 2px */
         }
@@ -219,25 +219,31 @@
                 <label for="host_file_path">输入主机文件路径</label>
                 <input type="text" id="host_file_path" name="host_file_path"
                     value="{{ host_file_path if host_file_path else default_hosts_file }}">
-                {% if error_messages.get('hosts_config_file') %}
-                <span class="error">{{ error_messages.hosts_config_file }}</span>
-                {% endif %}
+                <span class="error">
+                    {% if error_messages.get('hosts_config_file') %}
+                    {{ error_messages.hosts_config_file }}
+                    {% endif %}
+                </span>
             </div>
             <div>
                 <label for="group_file_path">输入群组文件路径</label>
                 <input type="text" id="group_file_path" name="group_file_path"
                     value="{{ group_file_path if group_file_path else default_groups_file }}">
-                {% if error_messages.get('groups_config_file') %}
-                <span class="error">{{ error_messages.groups_config_file }}</span>
-                {% endif %}
+                <span class="error">
+                    {% if error_messages.get('groups_config_file') %}
+                    {{ error_messages.groups_config_file }}
+                    {% endif %}
+                </span>
             </div>
             <div>
                 <label for="action_file_path">输入动作文件路径</label>
                 <input type="text" id="action_file_path" name="action_file_path"
                     value="{{ action_file_path if action_file_path else default_action_file }}">
-                {% if error_messages.get('action_file') %}
-                <span class="error">{{ error_messages.action_file }}</span>
-                {% endif %}
+                <span class="error">
+                    {% if error_messages.get('action_file') %}
+                    {{ error_messages.action_file }}
+                    {% endif %}
+                </span>
             </div>
             <div>
                 <label for="max_workers">并发执行的线程数</label>
