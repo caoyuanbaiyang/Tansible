@@ -202,9 +202,9 @@ class Tansible(object):
                 f.write(content)
 
     # 将执行结果导出为 HTML 文件
-    def dump_result_to_html(self, show=True):
+    def dump_result_to_html(self, host_file_path, group_file_path, action_file_path, max_workers, show=True):
         # 将执行结果写入到结果文件
-        result_file = C.DEFAULT_LOG_DIR + "tansible"+C.formatted_time+".result.html"
+        result_file = C.DEFAULT_LOG_DIR + "tansible" + C.formatted_time + ".result.html"
         C.log.debug("self.result长度：" + str(len(self.result)))
 
         # 读取模板文件
@@ -229,6 +229,10 @@ class Tansible(object):
 
         # 渲染模板
         html_content = template.replace('{{table_rows}}', table_rows)
+        html_content = html_content.replace('{{host_file_path}}', host_file_path)
+        html_content = html_content.replace('{{group_file_path}}', group_file_path)
+        html_content = html_content.replace('{{action_file_path}}', action_file_path)
+        html_content = html_content.replace('{{max_workers}}', str(max_workers))
 
         # 写入 HTML 文件
         with open(result_file, mode='w', encoding="utf-8", errors='ignore') as f:

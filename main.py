@@ -48,7 +48,7 @@ def work():
     tansible = Tansible(actions_file=args.action_file, hosts_file=args.hosts_config_file,
                    groups_file=args.groups_config_file, max_workers=args.workers, step_by_step=args.run_step_by_step)
     tansible.action_func()
-    tansible.dump_result_to_html()
+    tansible.dump_result_to_html( args.hosts_config_file, args.groups_config_file, args.action_file, args.workers)
 
 
 if __name__ == '__main__':

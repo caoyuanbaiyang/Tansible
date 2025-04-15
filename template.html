@@ -49,15 +49,28 @@
             background-color: #edf2f7;
             transition: background-color 0.3s ease;
         }
-         /* 执行结果为 failed 的行显示红色背景 */
+        /* 执行结果为 failed 的行显示红色背景 */
         .failed-row {
             color: red;
+        }
+       .input-info {
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background-color: #edf2f7;
+            border-radius: 0.375rem;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Tansible执行结果</h1>
+        <div class="input-info">
+            <h2 class="text-xl font-bold mb-2">执行参数</h2>
+            <p><strong>主机文件路径:</strong> {{host_file_path}}</p>
+            <p><strong>群组文件路径:</strong> {{group_file_path}}</p>
+            <p><strong>动作文件路径:</strong> {{action_file_path}}</p>
+            <p><strong>并发线程数:</strong> {{max_workers}}</p>
+        </div>
         <table>
             <thead>
                 <tr>
@@ -75,4 +88,4 @@
         </table>
     </div>
 </body>
-</html>    
+</html>

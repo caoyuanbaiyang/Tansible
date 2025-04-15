@@ -92,7 +92,7 @@ def index():
                     max_workers=max_workers
                 )
                 tansible.action_func()
-                tansible.dump_result_to_html(show=False)
+                tansible.dump_result_to_html(host_file_path, group_file_path, action_file_path, max_workers, show=False)
                 result = tansible.result
                 # 传递参数到结果页面
                 return render_template('result.html', result=result,
@@ -135,4 +135,4 @@ if __name__ == '__main__':
     host = '127.0.0.1'
     port = 5000
     threading.Timer(1, open_browser, [host, port]).start()
-    app.run(host, port, debug=True)
+    app.run(host, port, debug=False)
