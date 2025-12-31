@@ -18,7 +18,7 @@ def args_fun():
                         help='input groups file name,default is  groups.yml')
     parser.add_argument('-s', '--run_step_by_step', action='store_const', const=True,
                         help='enable step by step mode, only run with single thread and only for debug')
-    parser.add_argument('-w', '--workers', type=int, default=1,
+    parser.add_argument('-w', '--workers', type=int,
                         help='run with multi thread,you can set the number of threads here or in the action file')
     args = parser.parse_args()
     return args
