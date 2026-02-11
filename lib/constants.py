@@ -116,6 +116,7 @@ def PackHost(pub_cfg, host_cfg):
 MODULE_TRANS_DICT = {
     "shell": "Tshell",
     "sftp": "Tsftp",
+    "sftp1": "Tsftp1",
     "upload": "Tupload",
     "vsget1": "Tvsget1",
     "passwd": "SysPwdModify",
