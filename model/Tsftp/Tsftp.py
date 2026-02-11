@@ -29,7 +29,9 @@ class ModelClass(object):
             result_bool, err_list = self.conn.fetch_dir(local_dir=local_dir, remote_dir=remote_dir, excludes=excludes)
         return result_bool, err_list
 
-    def upload_to_linux(self, remote_dir, local_dir, excludes=[]):
+    def upload_to_linux(self, remote_dir, local_dir, excludes=None):
+        if excludes is None:
+            excludes = []
         return self.conn.put_dir(remote_dir, local_dir, excludes)
 
     def __acton_inner(self, local_home, cfg_key, cfg_value, action, hostname=None):
