@@ -49,15 +49,45 @@
             background-color: #edf2f7;
             transition: background-color 0.3s ease;
         }
-        /* 执行结果为 failed 的行显示红色背景 */
+        /* 执行结果为 failed 的行显示红色文字 */
         .failed-row {
             color: red;
         }
-       .input-info {
+        .input-info {
             margin-bottom: 2rem;
             padding: 1rem;
             background-color: #edf2f7;
             border-radius: 0.375rem;
+        }
+        /* 筛选控件样式 */
+        .filter-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .filter-label {
+            font-weight: 600;
+            color: #2d3748;
+        }
+        #resultFilter {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            min-width: 180px;
+            font-size: 0.9rem;
+        }
+        #resultFilter:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.25);
+        }
+        /* 新增：筛选结果行数样式 */
+        .result-count {
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
     </style>
 </head>
@@ -71,6 +101,19 @@
             <p><strong>动作文件路径:</strong> {{action_file_path}}</p>
             <p><strong>并发线程数:</strong> {{max_workers}}</p>
         </div>
+
+        <!-- 筛选控件 + 结果行数统计 -->
+        <div class="filter-container">
+            <label class="filter-label" for="resultFilter">筛选执行结果：</label>
+            <select id="resultFilter">
+                <option value="all">全部结果</option>
+                <option value="success">成功</option>
+                <option value="failed">失败</option>
+            </select>
+            <!-- 新增：筛选结果行数显示 -->
+            <span class="result-count" id="resultCount">共 0 条结果</span>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -82,10 +125,48 @@
                     <th style="width: 50%">返回结果</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="resultTableBody">
                 {{table_rows}}
             </tbody>
         </table>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterSelect = document.getElementById('resultFilter');
+            const tableBody = document.getElementById('resultTableBody');
+            const tableRows = tableBody.querySelectorAll('tr');
+            const resultCountSpan = document.getElementById('resultCount');
+
+            // 封装筛选和行数统计逻辑
+            function filterResults() {
+                const selectedValue = filterSelect.value;
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    const resultCell = row.querySelector('td:first-child');
+                    if (!resultCell) return;
+                    
+                    const resultText = resultCell.textContent.trim().toLowerCase();
+                    
+                    if (selectedValue === 'all' || resultText === selectedValue) {
+                        row.style.display = '';
+                        visibleCount++; // 统计可见行数
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // 更新行数显示
+                resultCountSpan.textContent = `共 ${visibleCount} 条结果`;
+            }
+
+            // 监听筛选变化
+            filterSelect.addEventListener('change', filterResults);
+
+            // 页面加载时初始化行数统计
+            filterResults();
+        });
+    </script>
 </body>
 </html>
