@@ -2,6 +2,7 @@ import os
 import threading
 import webbrowser
 from flask import Flask, render_template, request, session, jsonify
+from waitress import serve
 
 from Tansible import Tansible
 from lib.constants import DEFAULT_HOSTS_FILE, DEFAULT_ACTION_FILE, DEFAULT_GROUPS_FILE
@@ -54,6 +55,45 @@ def get_config_tree():
     return jsonify(tree)
 
 
+@app.route('/get_file_content', methods=['GET'])
+def get_file_content():
+    """获取文件内容用于预览 - 新增功能"""
+    file_path = request.args.get('path', '')
+    if not file_path:
+        return jsonify({'error': 'path parameter is required'}), 400
+
+    try:
+        # 安全检查：防止路径遍历攻击
+        if '..' in file_path:
+            return jsonify({'error': 'Invalid file path: path traversal detected'}), 403
+
+        # 限制读取的文件类型，只允许安全的文本文件
+        allowed_extensions = ['.yaml', '.yml', '.json', '.txt', '.md', '.ini', '.conf']
+        if not any(file_path.lower().endswith(ext) for ext in allowed_extensions):
+            return jsonify({'error': 'File type not allowed'}), 403
+
+        # 检查文件是否存在
+        if not os.path.exists(file_path):
+            return jsonify({'error': 'File not found'}), 404
+
+        # 检查是否是目录
+        if os.path.isdir(file_path):
+            return jsonify({'error': 'Path is a directory'}), 400
+
+        # 读取文件内容
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        return content, 200, {'Content-Type': 'text/plain; charset=utf-8'}
+
+    except PermissionError:
+        return jsonify({'error': 'Permission denied'}), 403
+    except UnicodeDecodeError:
+        return jsonify({'error': 'File encoding error: not a text file'}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
 @app.route('/', methods=['GET', 'POST'])
 def index():
     if request.method == 'POST':
@@ -92,7 +132,7 @@ def index():
                     max_workers=max_workers
                 )
                 tansible.action_func()
-                tansible.dump_result_to_html(host_file_path, group_file_path, action_file_path, max_workers, show=False)
+                tansible.dump_result_to_html(host_file_path, group_file_path, action_file_path, False)
                 result = tansible.result
                 # 传递参数到结果页面
                 return render_template('result.html', result=result,
@@ -135,4 +175,5 @@ if __name__ == '__main__':
     host = '127.0.0.1'
     port = 5000
     threading.Timer(1, open_browser, [host, port]).start()
-    app.run(host, port, debug=False)
+    serve(app, host=host, port=port)
+    # app.run(host, port, debug=False)
