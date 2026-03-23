@@ -16,14 +16,25 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 2rem;
             background-color: #fff;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             border-radius: 0.375rem;
             display: flex;
+            flex-direction: column;
             gap: 2rem;
+        }
+
+        .top-section {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+        }
+
+        .bottom-section {
+            width: 100%;
         }
 
         h1 {
@@ -37,7 +48,6 @@
         form {
             display: flex;
             flex-direction: column;
-            flex: 1;
         }
 
         label {
@@ -78,18 +88,22 @@
             flex: 1;
         }
 
+        .form-config {
+            flex: 1;
+        }
+
         input[type="button"] {
             margin-bottom: 1rem;
             padding: 0.75rem;
-            border: 1px solid #e2e8f0; /* 添加边框 */
-            background-color: #fff; /* 设置背景颜色为白色 */
+            border: 1px solid #e2e8f0;
+            background-color: #fff;
             border-radius: 0.375rem;
             cursor: pointer;
             transition: background-color 0.3s ease;
         }
 
         input[type="button"]:hover {
-            background-color: #e2f0ff; /* 鼠标悬停时的背景颜色 */
+            background-color: #e2f0ff;
         }
 
         #file-list {
@@ -130,17 +144,63 @@
             display: block;
         }
 
-        /* 新增样式，让按钮和输入框水平对齐 */
         .button-container {
             display: flex;
             flex-direction: column;
-            justify-content: start;
+            justify-content: center;
+            align-items: center;
             gap: 2.9rem;
             padding-top: 1.6rem;
-            /*padding-top: calc(1.85rem - 2px);  让按钮上移 2px */
+            min-width: 100px;
         }
 
+        .file-preview {
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            padding: 1rem;
+            height: 500px;
+            overflow: auto;
+            display: none;
+            width: 100%;
+        }
 
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-preview-header {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .file-preview-content {
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: #4a5568;
+        }
+
+        input[type="submit"]:disabled {
+            background-color: #a0aec0;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .loading-message {
+            margin-top: 0.5rem;
+            color: #4299e1;
+            font-weight: 500;
+            display: none;
+        }
+
+        .loading-message.show {
+            display: block;
+        }
     </style>
     <script>
         let selectedFilePath = '';
@@ -160,6 +220,57 @@
                 newSelectedLi.classList.add('selected');
             }
             selectedFilePath = path;
+
+            if (path.toLowerCase().endsWith('.yaml') || path.toLowerCase().endsWith('.txt') || path.toLowerCase().endsWith('.md') ) {
+                loadFileContent(path);
+            } else {
+                hideFilePreview();
+            }
+        }
+
+        async function loadFileContent(filePath) {
+            const previewArea = document.getElementById('file-preview');
+            const previewHeader = document.getElementById('preview-header');
+            const previewContent = document.getElementById('preview-content');
+
+            previewHeader.textContent = `正在加载: ${filePath}`;
+            previewContent.textContent = 'Loading...';
+            previewArea.classList.add('show');
+
+            try {
+                const response = await fetch(`/get_file_content?path=${encodeURIComponent(filePath)}`);
+                if (response.ok) {
+                    const content = await response.text();
+                    previewHeader.textContent = `文件内容: ${filePath}`;
+                    previewContent.textContent = content;
+                } else {
+                    previewHeader.textContent = `文件信息: ${filePath}`;
+                    previewContent.textContent = `# 文件预览不可用
+
+当前服务器未配置文件预览接口，请联系管理员启用:
+
+- 需要后端实现 /get_file_content API
+- 或者将文件内容预先生成到页面中
+
+文件名: ${filePath}`;
+                }
+            } catch (error) {
+                previewHeader.textContent = `预览提示`;
+                previewContent.textContent = `# 文件预览不可用
+
+当前网络环境下无法获取文件内容。可能原因:
+
+1. 后端未实现文件读取接口
+2. CORS策略阻止跨域请求
+3. 网络连接问题
+
+建议: 请联系管理员启用文件预览功能`;
+            }
+        }
+
+        function hideFilePreview() {
+            const previewArea = document.getElementById('file-preview');
+            previewArea.classList.remove('show');
         }
 
         function toggleFolder(li) {
@@ -181,7 +292,7 @@
                         event.stopPropagation();
                     } else if (item.type === 'directory') {
                         toggleFolder(li);
-                        event.stopPropagation(); // 阻止事件冒泡
+                        event.stopPropagation();
                     }
                 });
                 if (item.children) {
@@ -197,64 +308,92 @@
             const tree = await response.json();
             const fileList = document.getElementById('file-list');
             renderTree(tree, fileList);
+
+            const form = document.querySelector('form');
+            form.addEventListener('submit', handleFormSubmit);
         };
+
+        function handleFormSubmit(event) {
+            const submitButton = document.querySelector('input[type="submit"]');
+            const loadingMessage = document.querySelector('.loading-message');
+
+            submitButton.disabled = true;
+            submitButton.value = '正在运行...';
+            loadingMessage.classList.add('show');
+        }
     </script>
 </head>
 
 <body>
     <div class="container">
-        <!-- 第一纵：文件列表 -->
-        <div class="file-browser">
-            <div id="file-list"></div>
+        <!-- 上部分：目录显示区、按钮、表单配置区 -->
+        <div class="top-section">
+            <!-- 左侧：目录显示区 -->
+            <div class="file-browser">
+                <div id="file-list"></div>
+            </div>
+
+            <!-- 中间：传输按钮 -->
+            <div class="button-container">
+                <input type="button" class="button-1" value=">" onclick="transferFilePath('host_file_path')">
+                <input type="button" class="button-2" value=">" onclick="transferFilePath('group_file_path')">
+                <input type="button" class="button-3" value=">" onclick="transferFilePath('action_file_path')">
+            </div>
+
+            <!-- 右侧：表单配置区 -->
+            <div class="form-config">
+                <form method="post">
+                    <div>
+                        <label for="host_file_path">输入主机文件路径</label>
+                        <input type="text" id="host_file_path" name="host_file_path"
+                            value="{{ host_file_path if host_file_path else default_hosts_file }}">
+                        <span class="error">
+                            {% if error_messages.get('hosts_config_file') %}
+                            {{ error_messages.hosts_config_file }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <label for="group_file_path">输入群组文件路径</label>
+                        <input type="text" id="group_file_path" name="group_file_path"
+                            value="{{ group_file_path if group_file_path else default_groups_file }}">
+                        <span class="error">
+                            {% if error_messages.get('groups_config_file') %}
+                            {{ error_messages.groups_config_file }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <label for="action_file_path">输入动作文件路径</label>
+                        <input type="text" id="action_file_path" name="action_file_path"
+                            value="{{ action_file_path if action_file_path else default_action_file }}">
+                        <span class="error">
+                            {% if error_messages.get('action_file') %}
+                            {{ error_messages.action_file }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <label for="max_workers">并发执行的线程数</label>
+                        <input type="number" id="max_workers" name="max_workers" min="1"
+                            value="{{ max_workers if max_workers else 1 }}">
+                        {% if error_messages.get('workers') %}
+                        <span class="error">{{ error_messages.workers }}</span>
+                        {% endif %}
+                    </div>
+                    <input type="submit" value="运行">
+                    <div class="loading-message">正在运行，请稍候...</div>
+                </form>
+            </div>
         </div>
-        <!-- 第二纵：按钮 -->
-        <div class="button-container">
-            <input type="button" class="button-1" value=">" onclick="transferFilePath('host_file_path')">
-            <input type="button" class="button-2" value=">" onclick="transferFilePath('group_file_path')">
-            <input type="button" class="button-3" value=">" onclick="transferFilePath('action_file_path')">
+
+        <!-- 下部分：文件内容预览区域 -->
+        <div class="bottom-section">
+            <div id="file-preview" class="file-preview">
+                <div id="preview-header" class="file-preview-header"></div>
+                <pre id="preview-content" class="file-preview-content"></pre>
+            </div>
         </div>
-        <!-- 第三纵：表单 -->
-        <form method="post">
-            <div>
-                <label for="host_file_path">输入主机文件路径</label>
-                <input type="text" id="host_file_path" name="host_file_path"
-                    value="{{ host_file_path if host_file_path else default_hosts_file }}">
-                <span class="error">
-                    {% if error_messages.get('hosts_config_file') %}
-                    {{ error_messages.hosts_config_file }}
-                    {% endif %}
-                </span>
-            </div>
-            <div>
-                <label for="group_file_path">输入群组文件路径</label>
-                <input type="text" id="group_file_path" name="group_file_path"
-                    value="{{ group_file_path if group_file_path else default_groups_file }}">
-                <span class="error">
-                    {% if error_messages.get('groups_config_file') %}
-                    {{ error_messages.groups_config_file }}
-                    {% endif %}
-                </span>
-            </div>
-            <div>
-                <label for="action_file_path">输入动作文件路径</label>
-                <input type="text" id="action_file_path" name="action_file_path"
-                    value="{{ action_file_path if action_file_path else default_action_file }}">
-                <span class="error">
-                    {% if error_messages.get('action_file') %}
-                    {{ error_messages.action_file }}
-                    {% endif %}
-                </span>
-            </div>
-            <div>
-                <label for="max_workers">并发执行的线程数</label>
-                <input type="number" id="max_workers" name="max_workers" min="1"
-                    value="{{ max_workers if max_workers else 1 }}">
-                {% if error_messages.get('workers') %}
-                <span class="error">{{ error_messages.workers }}</span>
-                {% endif %}
-            </div>
-            <input type="submit" value="运行">
-        </form>
     </div>
 </body>
 
