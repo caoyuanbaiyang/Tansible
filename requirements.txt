@@ -1,4 +1,8 @@
-paramiko
-PyYAML
+paramiko~=3.4.0
+PyYAML~=6.0.1
 pyinstaller==4.5.1
 pyinstaller-hooks-contrib==2021.3
+# 增加app.py中的依赖
+chardet~=5.2.0
+flask~=3.1.0
+waitress~=3.0.0
