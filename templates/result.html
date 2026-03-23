@@ -59,24 +59,24 @@
             transition: background-color 0.3s ease;
         }
 
-       .failed-row {
+        .failed-row {
             color: red;
         }
 
-       .error {
+        .error {
             color: red;
             text-align: center;
             font-size: 1.25rem;
         }
 
-       .input-info {
+        .input-info {
             margin-bottom: 2rem;
             padding: 1rem;
             background-color: #edf2f7;
             border-radius: 0.375rem;
         }
 
-       .back-button {
+        .back-button {
             display: block;
             margin-top: 2rem;
             background-color: #4299e1;
@@ -90,8 +90,66 @@
             transition: background-color 0.3s ease;
         }
 
-       .back-button:hover {
+        .back-button:hover {
             background-color: #3182ce;
+        }
+
+        /* 筛选控件样式 */
+        .filter-container {
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background-color: #f7fafc;
+            border-radius: 0.375rem;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #2d3748;
+            white-space: nowrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            min-width: 100px;
+            font-size: 0.9rem;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.25);
+        }
+
+        /* 文本筛选框样式 */
+        .filter-input {
+            padding: 0.5rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            min-width: 150px;
+            font-size: 0.9rem;
+        }
+
+        /* 执行秒数数值输入框样式 */
+        .second-input {
+            min-width: 80px;
+        }
+
+        /* 筛选结果行数样式 */
+        .result-count {
+            color: #4a5568;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-left: auto;
+            white-space: nowrap;
         }
     </style>
 </head>
@@ -106,9 +164,46 @@
             <p><strong>动作文件路径:</strong> {{ action_file_path }}</p>
             <p><strong>并发线程数:</strong> {{ max_workers }}</p>
         </div>
+
         {% if error %}
         <p class="error">{{ error }}</p>
         {% else %}
+
+        <!-- 筛选控件 + 结果行数统计 -->
+        <div class="filter-container">
+            <label class="filter-label" for="resultFilter">筛选执行结果：</label>
+            <select id="resultFilter" class="filter-select">
+                <option value="all">全部结果</option>
+                <option value="success">成功</option>
+                <option value="failed">失败</option>
+            </select>
+
+            <label class="filter-label" for="taskFilter">任务：</label>
+            <input type="text" id="taskFilter" class="filter-input" placeholder="模糊筛选任务名称">
+
+            <label class="filter-label" for="moduleFilter">模块名：</label>
+            <input type="text" id="moduleFilter" class="filter-input" placeholder="模糊筛选模块名">
+
+            <label class="filter-label" for="hostFilter">主机名：</label>
+            <input type="text" id="hostFilter" class="filter-input" placeholder="模糊筛选主机名">
+
+            <!-- 新增执行秒数筛选 -->
+            <label class="filter-label" for="secondCondition">执行秒数：</label>
+            <select id="secondCondition" class="filter-select">
+                <option value="none">不筛选</option>
+                <option value="gt">大于</option>
+                <option value="eq">等于</option>
+                <option value="lt">小于</option>
+            </select>
+            <input type="number" id="secondValue" class="filter-input second-input" placeholder="输入数值" min="0">
+
+            <label class="filter-label" for="resultContentFilter">返回结果：</label>
+            <input type="text" id="resultContentFilter" class="filter-input" placeholder="模糊筛选返回结果">
+
+            <!-- 筛选结果行数显示 -->
+            <span class="result-count" id="resultCount">共 0 条结果</span>
+        </div>
+
         <table>
             <thead>
                 <tr>
@@ -120,7 +215,7 @@
                     <th style="width: 50%">返回结果</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody id="resultTableBody">
                 {% for item in result %}
                 <tr class="{% if item.status == 'failed' %}failed-row{% endif %}">
                     <td style="white-space: nowrap">{{ item.status }}</td>
@@ -136,6 +231,96 @@
         {% endif %}
         <a href="/" class="back-button">返回首页</a>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 获取所有筛选控件
+            const resultFilter = document.getElementById('resultFilter');
+            const taskFilter = document.getElementById('taskFilter');
+            const moduleFilter = document.getElementById('moduleFilter');
+            const hostFilter = document.getElementById('hostFilter');
+            const secondCondition = document.getElementById('secondCondition');
+            const secondValue = document.getElementById('secondValue');
+            const resultContentFilter = document.getElementById('resultContentFilter');
+            const tableBody = document.getElementById('resultTableBody');
+            const tableRows = tableBody.querySelectorAll('tr');
+            const resultCountSpan = document.getElementById('resultCount');
+
+            // 封装筛选和行数统计逻辑
+            function filterResults() {
+                // 获取所有筛选条件值（统一转小写，方便不区分大小写匹配）
+                const resultValue = resultFilter.value.toLowerCase().trim();
+                const taskValue = taskFilter.value.toLowerCase().trim();
+                const moduleValue = moduleFilter.value.toLowerCase().trim();
+                const hostValue = hostFilter.value.toLowerCase().trim();
+                const contentValue = resultContentFilter.value.toLowerCase().trim();
+                // 执行秒数筛选条件
+                const secCondition = secondCondition.value;
+                const secValue = parseFloat(secondValue.value) || 0;
+
+                let visibleCount = 0;
+
+                tableRows.forEach(row => {
+                    // 获取每行的对应列文本（转小写）
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 6) return; // 防止列数异常
+
+                    const rowResult = cells[0].textContent.trim().toLowerCase();
+                    const rowTask = cells[1].textContent.trim().toLowerCase();
+                    const rowModule = cells[2].textContent.trim().toLowerCase();
+                    const rowHost = cells[3].textContent.trim().toLowerCase();
+                    // 执行秒数转数值（处理非数字情况）
+                    const rowSecond = parseFloat(cells[4].textContent.trim()) || 0;
+                    const rowContent = cells[5].textContent.trim().toLowerCase();
+
+                    // 筛选条件判断（且关系：所有条件都满足才显示）
+                    const isResultMatch = resultValue === 'all' || rowResult === resultValue;
+                    const isTaskMatch = taskValue === '' || rowTask.includes(taskValue);
+                    const isModuleMatch = moduleValue === '' || rowModule.includes(moduleValue);
+                    const isHostMatch = hostValue === '' || rowHost.includes(hostValue);
+                    const isContentMatch = contentValue === '' || rowContent.includes(contentValue);
+                    // 执行秒数筛选判断
+                    let isSecondMatch = true;
+                    if (secCondition !== 'none') {
+                        switch (secCondition) {
+                            case 'gt':
+                                isSecondMatch = rowSecond > secValue;
+                                break;
+                            case 'eq':
+                                isSecondMatch = rowSecond === secValue;
+                                break;
+                            case 'lt':
+                                isSecondMatch = rowSecond < secValue;
+                                break;
+                        }
+                    }
+
+                    // 所有条件都满足则显示，否则隐藏
+                    if (isResultMatch && isTaskMatch && isModuleMatch && isHostMatch && isSecondMatch && isContentMatch) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+
+                // 更新行数显示
+                resultCountSpan.textContent = `共 ${visibleCount} 条结果`;
+            }
+
+            // 监听所有筛选控件的变化事件
+            resultFilter.addEventListener('change', filterResults);
+            taskFilter.addEventListener('input', filterResults);
+            moduleFilter.addEventListener('input', filterResults);
+            hostFilter.addEventListener('input', filterResults);
+            secondCondition.addEventListener('change', filterResults);
+            secondValue.addEventListener('input', filterResults); // 实时输入实时筛选
+            resultContentFilter.addEventListener('input', filterResults);
+
+            // 页面加载时初始化行数统计
+            filterResults();
+        });
+    </script>
 </body>
 
 </html>
