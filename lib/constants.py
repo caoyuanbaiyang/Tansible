@@ -154,3 +154,8 @@ def decode_byte_string(byte_string):
     decoded_string = byte_string.decode(detected_encoding)
 
     return decoded_string
+
+def clean_to_int(s):
+    # 过滤所有非数字字符
+    cleaned = ''.join(filter(str.isdigit, str(s)))
+    return int(cleaned) if cleaned else 0
