@@ -25,7 +25,7 @@ from pathlib import Path
 
 import chardet
 import select
-from Tools.scripts.md5sum import bufsize
+# from Tools.scripts.md5sum import bufsize
 
 import lib.constants as C
 
@@ -195,8 +195,11 @@ class Connection(object):
             # 检查是否出现了提示符,如果出现了提示符，则认为命令执行完成，无须再循环获取了
             if re.search(end_pattern, exit_stdout):  # 假设提示符为 $, # 或 >
                 break
-        exit_status = int(exit_stdout.strip().split('\n')[-2])
-
+        try:
+            exit_status = int(exit_stdout.strip().split('\n')[-2])
+        except Exception as e:
+            print('返回码：' + exit_stdout.strip().split('\n')[-2] + '**')
+            exit_status = C.clean_to_int(exit_stdout.strip().split('\n')[-2])
         return exit_status, '', stdout, stdout
 
     def exec_command_invoke_shell_1(self, cmd):
