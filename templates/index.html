@@ -1,400 +1,749 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文件路径输入和线程数输入</title>
-    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>FlowForge · 任务编排控制台 (离线适配版)</title>
+    <!-- 完全移除所有外部依赖: 无Google字体, 无Tailwind CDN, 无FontAwesome CDN -->
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f4f4f9;
-            color: #333;
-            line-height: 1.5;
-            letter-spacing: 0.02em;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container {
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: linear-gradient(145deg, #eef2f9 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            padding: 2rem 1.5rem;
+        }
+
+        /* 主容器 - 毛玻璃质感卡片 */
+        .glass-panel {
             max-width: 1600px;
             margin: 0 auto;
-            padding: 2rem;
-            background-color: #fff;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-radius: 0.375rem;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(0px);
+            border-radius: 2rem;
+            box-shadow: 0 25px 45px -12px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.02);
+            transition: all 0.2s ease;
+            overflow: hidden;
+        }
+
+        .dashboard {
             display: flex;
             flex-direction: column;
+            padding: 1.75rem 2rem 2rem 2rem;
             gap: 2rem;
         }
 
-        .top-section {
+        /* 三栏区域 */
+        .triple-col {
             display: flex;
-            gap: 2rem;
-            align-items: flex-start;
+            flex-wrap: wrap;
+            gap: 1.75rem;
+            align-items: stretch;
         }
 
-        .bottom-section {
-            width: 100%;
-        }
-
-        h1 {
-            font-size: 2.25rem;
-            font-weight: 700;
-            text-align: center;
-            color: #2d3748;
-            margin-bottom: 2rem;
-        }
-
-        form {
+        /* 左侧文件浏览器卡片 */
+        .file-explorer-card {
+            flex: 2;
+            min-width: 260px;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            border: 1px solid rgba(203, 213, 225, 0.5);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
+            overflow: hidden;
+            height: 560px;
         }
 
-        label {
+        .card-header {
+            padding: 1rem 1.25rem;
+            background: #fafcff;
+            border-bottom: 1px solid #eef2f6;
             font-weight: 600;
-            margin-bottom: 0.25rem;
+            font-size: 0.95rem;
+            letter-spacing: -0.2px;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
-        input[type="text"],
-        input[type="number"] {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            width: 100%;
-        }
-
-        input[type="submit"] {
-            background-color: #4299e1;
-            color: #fff;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        input[type="submit"]:hover {
-            background-color: #3182ce;
-        }
-
-        .error {
-            color: red;
-            min-height: 1.5rem;
-            display: block;
-        }
-
-        .file-browser {
-            flex: 1;
-        }
-
-        .form-config {
-            flex: 1;
-        }
-
-        input[type="button"] {
-            margin-bottom: 1rem;
-            padding: 0.75rem;
-            border: 1px solid #e2e8f0;
-            background-color: #fff;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        input[type="button"]:hover {
-            background-color: #e2f0ff;
-        }
-
+        /* 文件列表容器 */
         #file-list {
-            height: 600px;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            padding: 0.5rem;
+            flex: 1;
             overflow-y: auto;
+            padding: 0.75rem 0.25rem 0.75rem 0;
+            scroll-behavior: smooth;
         }
 
+        @media (max-width: 880px) {
+            .file-explorer-card {
+                height: 480px;
+            }
+        }
+
+        /* 树形结构 */
         .tree {
-            list-style-type: none;
-            padding-left: 20px;
+            list-style: none;
+            padding-left: 0.25rem;
+            margin: 0;
         }
-
+        .tree .tree {
+            padding-left: 1.5rem;
+        }
         .tree li {
-            margin-bottom: 5px;
+            margin: 0.2rem 0;
+            padding: 0.4rem 0.6rem 0.4rem 1.8rem;
+            border-radius: 0.65rem;
             cursor: pointer;
+            position: relative;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #1f2937;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
         }
-
+        .tree li.directory {
+            background: none;
+            font-weight: 500;
+        }
         .tree li.directory::before {
             content: '📁 ';
+            font-size: 1rem;
+            margin-right: 0.4rem;
+            position: relative;
+            top: 0px;
         }
-
         .tree li.file::before {
             content: '📄 ';
+            font-size: 1rem;
+            margin-right: 0.4rem;
         }
-
+        .tree li.directory {
+            position: relative;
+            padding-left: 1.8rem;
+        }
+        .tree li.directory::after {
+            content: '▶';
+            position: absolute;
+            left: 0.2rem;
+            top: 0.45rem;
+            font-size: 0.7rem;
+            color: #5b6e8c;
+            transition: transform 0.2s ease;
+            font-family: monospace;
+        }
+        .tree li.directory.expanded::after {
+            content: '▼';
+            transform: rotate(0deg);
+        }
+        .tree li:hover {
+            background-color: #f1f5f9;
+            transform: translateX(2px);
+        }
         .tree li.selected {
-            background-color: #e2f0ff;
+            background: linear-gradient(95deg, #eef2ff 0%, #e0e7ff 100%);
+            border-left: 3px solid #3b82f6;
+            color: #0f172a;
+            font-weight: 600;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
         }
-
         .tree li ul {
             display: none;
+            margin-top: 0.25rem;
+            width: 100%;
         }
-
         .tree li.expanded > ul {
             display: block;
         }
 
-        .button-container {
+        /* 传送按钮组 */
+        .transfer-buttons {
+            flex: 0 0 auto;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 2rem;
+            padding: 1rem 0;
+        }
+        .transfer-btn {
+            background: white;
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 28px;
+            background: #ffffff;
+            box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(148, 163, 184, 0.2);
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            display: flex;
             align-items: center;
-            gap: 2.9rem;
-            padding-top: 1.6rem;
-            min-width: 100px;
+            justify-content: center;
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #1e40af;
+        }
+        .transfer-btn span {
+            font-size: 1.7rem;
+            line-height: 1;
+            display: inline-block;
+        }
+        .transfer-btn:hover {
+            transform: scale(1.08);
+            background: #3b82f6;
+            box-shadow: 0 12px 22px -10px #3b82f680;
+        }
+        .transfer-btn:hover span {
+            color: white;
+        }
+        .transfer-btn:active {
+            transform: scale(0.98);
         }
 
-        .file-preview {
-            border: 1px solid #e2e8f0;
-            border-radius: 0.375rem;
-            background-color: #fff;
-            padding: 1rem;
-            height: 500px;
-            overflow: auto;
-            display: none;
+        /* 右侧配置卡片 */
+        .config-card {
+            flex: 1.6;
+            min-width: 280px;
+            background: #ffffff;
+            border-radius: 1.5rem;
+            border: 1px solid #e9edf2;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 6px 12px -8px rgba(0, 0, 0, 0.05);
+            transition: all 0.2s;
+        }
+        .form-group {
+            margin-bottom: 1.35rem;
+        }
+        .form-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            color: #334155;
+            margin-bottom: 0.5rem;
+        }
+        .form-label span.icon-emoji {
+            font-size: 0.9rem;
+            width: 1.25rem;
+            display: inline-block;
+        }
+        .form-input {
             width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1rem;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background-color: #fefefe;
+            transition: all 0.2s;
+            color: #0f172a;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            background-color: white;
+        }
+        .error-msg {
+            font-size: 0.7rem;
+            color: #e11d48;
+            margin-top: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .btn-run {
+            width: 100%;
+            background: linear-gradient(105deg, #2563eb 0%, #1e40af 100%);
+            border: none;
+            padding: 0.85rem 0;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.6rem;
+            cursor: pointer;
+            transition: all 0.25s;
+            margin-top: 0.5rem;
+            box-shadow: 0 8px 18px -8px #1e3a8a60;
+        }
+        .btn-run:hover:not(:disabled) {
+            transform: translateY(-2px);
+            background: linear-gradient(105deg, #3b82f6, #1e3a8a);
+            box-shadow: 0 15px 25px -12px #2563eb;
+        }
+        .btn-run:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .loading-message {
+            text-align: center;
+            margin-top: 0.8rem;
+            font-size: 0.75rem;
+            color: #2563eb;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .loading-message.show {
+            display: flex;
         }
 
+        /* 底部预览区 */
+        .preview-section {
+            background: #f8fafd;
+            border-radius: 1.25rem;
+            border: 1px solid #e2edf7;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+        .preview-header {
+            background: #ffffffdd;
+            backdrop-filter: blur(2px);
+            padding: 0.8rem 1.25rem;
+            border-bottom: 1px solid #e9edf2;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            color: #1e293b;
+        }
+        .file-preview {
+            max-height: 460px;
+            overflow: auto;
+            padding: 1.25rem;
+            display: none;
+            background: #ffffff;
+            font-family: 'SF Mono', 'Fira Code', 'Courier New', monospace;
+            font-size: 0.8rem;
+            line-height: 1.5;
+            color: #0f172a;
+        }
         .file-preview.show {
             display: block;
         }
-
-        .file-preview-header {
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #2d3748;
-            padding-bottom: 0.5rem;
-            border-bottom: 1px solid #e2e8f0;
+        .preview-placeholder {
+            padding: 2.5rem;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 0.85rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
         }
-
-        .file-preview-content {
-            font-family: 'Courier New', monospace;
-            font-size: 0.875rem;
+        pre {
             white-space: pre-wrap;
-            word-break: break-all;
-            color: #4a5568;
+            word-break: break-word;
+            font-family: inherit;
+            margin: 0;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #eef2f8;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #b9c3d0;
+            border-radius: 6px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        @media (max-width: 880px) {
+            .triple-col {
+                flex-direction: column;
+            }
+            .transfer-buttons {
+                flex-direction: row;
+                justify-content: center;
+                gap: 1.5rem;
+                order: 2;
+            }
+            .file-explorer-card, .config-card {
+                order: 1;
+            }
+            body {
+                padding: 1rem;
+            }
+            .dashboard {
+                padding: 1rem;
+            }
+        }
+        .file-preview-content {
+            font-family: 'SF Mono', 'Menlo', monospace;
+            font-size: 0.75rem;
+            background: #fefefe;
+        }
+        .badge-icon {
+            background: #eef2ff;
+            border-radius: 2rem;
+            padding: 0.2rem 0.6rem;
+            font-size: 0.7rem;
+            color: #2563eb;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
         }
 
-        input[type="submit"]:disabled {
-            background-color: #a0aec0;
-            cursor: not-allowed;
-            opacity: 0.7;
-        }
-
-        .loading-message {
-            margin-top: 0.5rem;
-            color: #4299e1;
-            font-weight: 500;
-            display: none;
-        }
-
-        .loading-message.show {
-            display: block;
+        /* 替代Tailwind的工具类 (离网完整支持) */
+        .flex { display: flex; }
+        .flex-wrap { flex-wrap: wrap; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .gap-3 { gap: 0.75rem; }
+        .mb-1 { margin-bottom: 0.25rem; }
+        .mt-1 { margin-top: 0.25rem; }
+        .gap-1 { gap: 0.25rem; }
+        .gap-2 { gap: 0.5rem; }
+        .ml-auto { margin-left: auto; }
+        .text-2xl { font-size: 1.5rem; line-height: 2rem; }
+        .font-bold { font-weight: 700; }
+        .tracking-tight { letter-spacing: -0.025em; }
+        .text-sm { font-size: 0.875rem; line-height: 1.25rem; }
+        .text-xs { font-size: 0.75rem; line-height: 1rem; }
+        .text-slate-500 { color: #64748b; }
+        .text-slate-700 { color: #334155; }
+        .bg-clip-text { background-clip: text; }
+        .text-transparent { color: transparent; }
+        .bg-gradient-to-r { background-image: linear-gradient(to right, #1e293b, #475569); }
+        .from-slate-800 { --tw-gradient-from: #1e293b; --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to, rgba(30, 41, 59, 0)); }
+        .to-slate-600 { --tw-gradient-to: #475569; }
+        /* 简化标题渐变色为纯色深灰，避免依赖复杂渐变同时视觉干净 */
+        .title-solid {
+            background: none;
+            color: #0f172a;
+            -webkit-text-fill-color: #0f172a;
         }
     </style>
-    <script>
-        let selectedFilePath = '';
-
-        function transferFilePath(inputId) {
-            const input = document.getElementById(inputId);
-            input.value = selectedFilePath;
-        }
-
-        function selectFile(path) {
-            const selectedLi = document.querySelector('.tree li.selected');
-            if (selectedLi) {
-                selectedLi.classList.remove('selected');
-            }
-            const newSelectedLi = document.querySelector(`.tree li[data-path="${path}"]`);
-            if (newSelectedLi) {
-                newSelectedLi.classList.add('selected');
-            }
-            selectedFilePath = path;
-
-            if (path.toLowerCase().endsWith('.yaml') || path.toLowerCase().endsWith('.txt') || path.toLowerCase().endsWith('.md') ) {
-                loadFileContent(path);
-            } else {
-                hideFilePreview();
-            }
-        }
-
-        async function loadFileContent(filePath) {
-            const previewArea = document.getElementById('file-preview');
-            const previewHeader = document.getElementById('preview-header');
-            const previewContent = document.getElementById('preview-content');
-
-            previewHeader.textContent = `正在加载: ${filePath}`;
-            previewContent.textContent = 'Loading...';
-            previewArea.classList.add('show');
-
-            try {
-                const response = await fetch(`/get_file_content?path=${encodeURIComponent(filePath)}`);
-                if (response.ok) {
-                    const content = await response.text();
-                    previewHeader.textContent = `文件内容: ${filePath}`;
-                    previewContent.textContent = content;
-                } else {
-                    previewHeader.textContent = `文件信息: ${filePath}`;
-                    previewContent.textContent = `# 文件预览不可用
-
-当前服务器未配置文件预览接口，请联系管理员启用:
-
-- 需要后端实现 /get_file_content API
-- 或者将文件内容预先生成到页面中
-
-文件名: ${filePath}`;
-                }
-            } catch (error) {
-                previewHeader.textContent = `预览提示`;
-                previewContent.textContent = `# 文件预览不可用
-
-当前网络环境下无法获取文件内容。可能原因:
-
-1. 后端未实现文件读取接口
-2. CORS策略阻止跨域请求
-3. 网络连接问题
-
-建议: 请联系管理员启用文件预览功能`;
-            }
-        }
-
-        function hideFilePreview() {
-            const previewArea = document.getElementById('file-preview');
-            previewArea.classList.remove('show');
-        }
-
-        function toggleFolder(li) {
-            li.classList.toggle('expanded');
-        }
-
-        function renderTree(tree, parentElement, basePath = '') {
-            const ul = document.createElement('ul');
-            ul.classList.add('tree');
-            tree.forEach(item => {
-                const li = document.createElement('li');
-                li.classList.add(item.type);
-                const fullPath = basePath ? `${basePath}/${item.name}` : item.name;
-                li.textContent = item.name;
-                li.setAttribute('data-path', fullPath);
-                li.addEventListener('click', (event) => {
-                    if (item.type === 'file') {
-                        selectFile(fullPath);
-                        event.stopPropagation();
-                    } else if (item.type === 'directory') {
-                        toggleFolder(li);
-                        event.stopPropagation();
-                    }
-                });
-                if (item.children) {
-                    renderTree(item.children, li, fullPath);
-                }
-                ul.appendChild(li);
-            });
-            parentElement.appendChild(ul);
-        }
-
-        window.onload = async () => {
-            const response = await fetch('/get_config_tree');
-            const tree = await response.json();
-            const fileList = document.getElementById('file-list');
-            renderTree(tree, fileList);
-
-            const form = document.querySelector('form');
-            form.addEventListener('submit', handleFormSubmit);
-        };
-
-        function handleFormSubmit(event) {
-            const submitButton = document.querySelector('input[type="submit"]');
-            const loadingMessage = document.querySelector('.loading-message');
-
-            submitButton.disabled = true;
-            submitButton.value = '正在运行...';
-            loadingMessage.classList.add('show');
-        }
-    </script>
 </head>
-
 <body>
-    <div class="container">
-        <!-- 上部分：目录显示区、按钮、表单配置区 -->
-        <div class="top-section">
-            <!-- 左侧：目录显示区 -->
-            <div class="file-browser">
-                <div id="file-list"></div>
+<div class="glass-panel">
+    <div class="dashboard">
+        <!-- 优雅标题区 - 完全本地图标/无外部资源 -->
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight flex items-center gap-2" style="color:#0f172a;">
+                    <span>⚙️🔗</span> 
+                    FlowForge · 编排工坊
+                </h1>
+                <p class="text-sm text-slate-500 mt-1 flex items-center gap-1"><span>📂</span> 选择配置 | 多线程执行 | 实时预览</p>
+            </div>
+            <div class="badge-icon"><span>🖥️</span> 并发控制台</div>
+        </div>
+
+        <!-- 三栏核心区域 -->
+        <div class="triple-col">
+            <!-- 左侧：文件浏览器 -->
+            <div class="file-explorer-card">
+                <div class="card-header">
+                    <span>💾</span> 工作空间 · 文件树
+                    <span class="text-xs text-gray-400 ml-auto"><span>📂</span> 点击目录展开</span>
+                </div>
+                <div id="file-list" style="scrollbar-width: thin;">
+                    <div class="text-center py-10 text-slate-400 text-sm"><span>⏳</span> 加载配置目录...</div>
+                </div>
             </div>
 
-            <!-- 中间：传输按钮 -->
-            <div class="button-container">
-                <input type="button" class="button-1" value=">" onclick="transferFilePath('host_file_path')">
-                <input type="button" class="button-2" value=">" onclick="transferFilePath('group_file_path')">
-                <input type="button" class="button-3" value=">" onclick="transferFilePath('action_file_path')">
+            <!-- 中间：传送按钮组 (本地字符箭头) -->
+            <div class="transfer-buttons">
+                <button class="transfer-btn" onclick="transferFilePath('host_file_path')" title="传输主机文件路径">
+                    <span>➡️</span>
+                </button>
+                <button class="transfer-btn" onclick="transferFilePath('group_file_path')" title="传输群组文件路径">
+                    <span>➡️</span>
+                </button>
+                <button class="transfer-btn" onclick="transferFilePath('action_file_path')" title="传输动作文件路径">
+                    <span>➡️</span>
+                </button>
             </div>
 
-            <!-- 右侧：表单配置区 -->
-            <div class="form-config">
-                <form method="post">
-                    <div>
-                        <label for="host_file_path">输入主机文件路径</label>
-                        <input type="text" id="host_file_path" name="host_file_path"
-                            value="{{ host_file_path if host_file_path else default_hosts_file }}">
-                        <span class="error">
+            <!-- 右侧：表单配置区域 所有图标替换为emoji -->
+            <div class="config-card">
+                <form method="post" id="mainForm">
+                    <div class="form-group">
+                        <div class="form-label"><span class="icon-emoji">🖧</span> 主机配置文件</div>
+                        <input type="text" id="host_file_path" name="host_file_path" class="form-input" 
+                               placeholder="/config/hosts.yaml" value="{{ host_file_path if host_file_path else default_hosts_file }}">
+                        <span class="error-msg">
                             {% if error_messages.get('hosts_config_file') %}
-                            {{ error_messages.hosts_config_file }}
+                            <span>⚠️</span> {{ error_messages.hosts_config_file }}
                             {% endif %}
                         </span>
                     </div>
-                    <div>
-                        <label for="group_file_path">输入群组文件路径</label>
-                        <input type="text" id="group_file_path" name="group_file_path"
-                            value="{{ group_file_path if group_file_path else default_groups_file }}">
-                        <span class="error">
+                    <div class="form-group">
+                        <div class="form-label"><span class="icon-emoji">👥</span> 群组配置文件</div>
+                        <input type="text" id="group_file_path" name="group_file_path" class="form-input"
+                               placeholder="/config/groups.yaml" value="{{ group_file_path if group_file_path else default_groups_file }}">
+                        <span class="error-msg">
                             {% if error_messages.get('groups_config_file') %}
-                            {{ error_messages.groups_config_file }}
+                            <span>⚠️</span> {{ error_messages.groups_config_file }}
                             {% endif %}
                         </span>
                     </div>
-                    <div>
-                        <label for="action_file_path">输入动作文件路径</label>
-                        <input type="text" id="action_file_path" name="action_file_path"
-                            value="{{ action_file_path if action_file_path else default_action_file }}">
-                        <span class="error">
+                    <div class="form-group">
+                        <div class="form-label"><span class="icon-emoji">⚙️</span> 动作定义文件</div>
+                        <input type="text" id="action_file_path" name="action_file_path" class="form-input"
+                               placeholder="/config/actions.yaml" value="{{ action_file_path if action_file_path else default_action_file }}">
+                        <span class="error-msg">
                             {% if error_messages.get('action_file') %}
-                            {{ error_messages.action_file }}
+                            <span>⚠️</span> {{ error_messages.action_file }}
                             {% endif %}
                         </span>
                     </div>
-                    <div>
-                        <label for="max_workers">并发执行的线程数</label>
-                        <input type="number" id="max_workers" name="max_workers" min="1"
-                            value="{{ max_workers if max_workers else 1 }}">
+                    <div class="form-group">
+                        <div class="form-label"><span class="icon-emoji">📊</span> 最大并发线程数</div>
+                        <input type="number" id="max_workers" name="max_workers" min="1" class="form-input"
+                               value="{{ max_workers if max_workers else 1 }}">
                         {% if error_messages.get('workers') %}
-                        <span class="error">{{ error_messages.workers }}</span>
+                        <span class="error-msg"><span>⚠️</span> {{ error_messages.workers }}</span>
                         {% endif %}
                     </div>
-                    <input type="submit" value="运行">
-                    <div class="loading-message">正在运行，请稍候...</div>
+                    <button type="submit" class="btn-run" id="submitBtn">
+                        <span>▶️</span> 启动工作流
+                    </button>
+                    <div class="loading-message" id="loadingMsg">
+                        <div class="loading-spinner"></div>
+                        <span>任务正在执行中，请稍后...</span>
+                    </div>
                 </form>
             </div>
         </div>
 
-        <!-- 下部分：文件内容预览区域 -->
-        <div class="bottom-section">
+        <!-- 底部：文件内容预览区 -->
+        <div class="preview-section">
+            <div class="preview-header">
+                <span>📄</span> 智能预览面板
+                <span class="text-xs text-gray-400 ml-auto"><span>👁️</span> 支持 YAML / TXT / MD</span>
+            </div>
             <div id="file-preview" class="file-preview">
-                <div id="preview-header" class="file-preview-header"></div>
-                <pre id="preview-content" class="file-preview-content"></pre>
+                <div id="preview-header" class="text-sm font-semibold pb-2 border-b mb-2 text-slate-700"></div>
+                <pre id="preview-content" class="file-preview-content text-sm"></pre>
+            </div>
+            <div class="preview-placeholder" id="preview-placeholder" style="display: flex;">
+                <span style="font-size:2rem;">📄</span>
+                <span>点击左侧文件，可预览 YAML / TXT / MD 内容</span>
             </div>
         </div>
     </div>
-</body>
+</div>
 
+<script>
+    let selectedFilePath = '';
+    // 将选中的文件路径传输到指定input框
+    function transferFilePath(inputId) {
+        const input = document.getElementById(inputId);
+        if (selectedFilePath) {
+            input.value = selectedFilePath;
+            // 微交互：闪一下高亮效果
+            input.style.transition = '0.1s';
+            input.style.borderColor = '#3b82f6';
+            input.style.backgroundColor = '#eff6ff';
+            setTimeout(() => {
+                input.style.borderColor = '';
+                input.style.backgroundColor = '';
+            }, 400);
+        } else {
+            // 轻提醒：未选中任何文件
+            const msg = document.createElement('div');
+            msg.textContent = '⚠️ 请先在左侧文件树中选中一个文件';
+            msg.style.position = 'fixed';
+            msg.style.bottom = '20px';
+            msg.style.left = '50%';
+            msg.style.transform = 'translateX(-50%)';
+            msg.style.backgroundColor = '#f1f5f9';
+            msg.style.color = '#1e293b';
+            msg.style.padding = '8px 18px';
+            msg.style.borderRadius = '40px';
+            msg.style.fontSize = '0.8rem';
+            msg.style.zIndex = '999';
+            msg.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            msg.style.border = '1px solid #cbd5e1';
+            document.body.appendChild(msg);
+            setTimeout(() => msg.remove(), 1800);
+        }
+    }
+
+    // 选中文件高亮 + 预览
+    function selectFile(path) {
+        // 移除所有选中样式
+        const prevSelected = document.querySelector('.tree li.selected');
+        if (prevSelected) prevSelected.classList.remove('selected');
+        
+        const newSelectedLi = document.querySelector(`.tree li[data-path="${path.replace(/"/g, '\\"')}"]`);
+        if (newSelectedLi) {
+            newSelectedLi.classList.add('selected');
+        }
+        selectedFilePath = path;
+        
+        // 检查是否支持预览
+        const lowerPath = path.toLowerCase();
+        if (lowerPath.endsWith('.yaml') || lowerPath.endsWith('.yml') || lowerPath.endsWith('.txt') || lowerPath.endsWith('.md')) {
+            loadFileContent(path);
+        } else {
+            hideFilePreview();
+            showPlaceholderWithMessage(`不支持预览此文件类型 (${path.split('.').pop() || '未知'})，仅支持 YAML/TXT/MD`);
+        }
+    }
+    
+    function showPlaceholderWithMessage(msg) {
+        const previewArea = document.getElementById('file-preview');
+        const placeholder = document.getElementById('preview-placeholder');
+        previewArea.classList.remove('show');
+        if (placeholder) {
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = `<span style="font-size:2rem;">📄</span><span>${escapeHtml(msg)}</span>`;
+        }
+    }
+    
+    async function loadFileContent(filePath) {
+        const previewArea = document.getElementById('file-preview');
+        const previewHeader = document.getElementById('preview-header');
+        const previewContent = document.getElementById('preview-content');
+        const placeholder = document.getElementById('preview-placeholder');
+        
+        if (placeholder) placeholder.style.display = 'none';
+        previewArea.classList.add('show');
+        previewHeader.innerHTML = `<span>⏳</span> 正在加载：${escapeHtml(filePath)}`;
+        previewContent.textContent = '读取内容中 ...';
+        
+        try {
+            const response = await fetch(`/get_file_content?path=${encodeURIComponent(filePath)}`);
+            if (response.ok) {
+                const content = await response.text();
+                previewHeader.innerHTML = `<span>✅</span> 文件预览 · ${escapeHtml(filePath)}`;
+                previewContent.textContent = content;
+                if (placeholder) placeholder.style.display = 'none';
+            } else {
+                previewHeader.innerHTML = `<span>🚫</span> 预览受限 · ${escapeHtml(filePath)}`;
+                previewContent.textContent = `# 无法获取文件内容\n\n后端接口 /get_file_content 未实现或返回错误。\n\n如果需要完整预览功能，请后端实现该接口。\n\n文件名: ${filePath}\n状态码: ${response.status}`;
+                if (placeholder) placeholder.style.display = 'none';
+            }
+        } catch (error) {
+            previewHeader.innerHTML = `<span>⚠️</span> 网络错误`;
+            previewContent.textContent = `# 文件预览不可用\n\n网络请求失败，可能原因：\n- 后端未配置 /get_file_content 路由\n- CORS 策略限制\n- 服务连接异常\n\n建议联系管理员启用预览功能。\n\n文件: ${filePath}`;
+            if (placeholder) placeholder.style.display = 'none';
+        }
+    }
+    
+    function hideFilePreview() {
+        const previewArea = document.getElementById('file-preview');
+        const placeholder = document.getElementById('preview-placeholder');
+        previewArea.classList.remove('show');
+        if (placeholder) {
+            placeholder.style.display = 'flex';
+            placeholder.innerHTML = `<span style="font-size:2rem;">📄</span><span>点击左侧文件，可预览 YAML / TXT / MD 内容</span>`;
+        }
+    }
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function toggleFolder(li) {
+        li.classList.toggle('expanded');
+    }
+    
+    // 渲染树形 (完全基于本地字符，无外部字体)
+    function renderTree(tree, parentElement, basePath = '') {
+        const ul = document.createElement('ul');
+        ul.classList.add('tree');
+        tree.forEach(item => {
+            const li = document.createElement('li');
+            li.classList.add(item.type);
+            const fullPath = basePath ? `${basePath}/${item.name}` : item.name;
+            const textSpan = document.createTextNode(item.name);
+            li.appendChild(textSpan);
+            li.setAttribute('data-path', fullPath);
+            
+            li.addEventListener('click', (event) => {
+                event.stopPropagation();
+                if (item.type === 'file') {
+                    selectFile(fullPath);
+                } else if (item.type === 'directory') {
+                    toggleFolder(li);
+                }
+            });
+            
+            if (item.children && item.children.length) {
+                renderTree(item.children, li, fullPath);
+            }
+            ul.appendChild(li);
+        });
+        parentElement.appendChild(ul);
+    }
+    
+    // 初始化加载目录树
+    window.onload = async () => {
+        const fileListContainer = document.getElementById('file-list');
+        fileListContainer.innerHTML = '<div class="text-center py-10 text-slate-400"><span>⏳</span> 读取配置目录树...</div>';
+        try {
+            const response = await fetch('/get_config_tree');
+            if (!response.ok) throw new Error('网络错误');
+            const tree = await response.json();
+            fileListContainer.innerHTML = '';
+            renderTree(tree, fileListContainer);
+        } catch (err) {
+            fileListContainer.innerHTML = `<div class="text-center py-10 text-red-400"><span>⚠️</span> 无法加载目录树，请确保后端 /get_config_tree 可用<br><span class="text-xs">${escapeHtml(err.message)}</span></div>`;
+        }
+        
+        // 表单提交加载效果
+        const form = document.querySelector('form');
+        const submitBtn = document.getElementById('submitBtn');
+        const loadingMsgDiv = document.getElementById('loadingMsg');
+        
+        if (form) {
+            form.addEventListener('submit', (event) => {
+                if (submitBtn.disabled) {
+                    event.preventDefault();
+                    return;
+                }
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="loading-spinner" style="border-top-color:white; border-color:rgba(255,255,255,0.3); margin-right:0.4rem;"></span> 执行中 ...';
+                loadingMsgDiv.classList.add('show');
+            });
+        }
+        
+        hideFilePreview();
+    };
+</script>
+</body>
 </html>
