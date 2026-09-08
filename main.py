@@ -2,6 +2,7 @@
 import argparse
 import codecs
 import os
+import sys
 
 codecs.register(lambda name: codecs.lookup('utf-8') if name == 'idna' else None)
 
@@ -27,18 +28,18 @@ def args_fun():
 def args_check(args):
     if not os.path.exists(args.action_file):
         print(f"action file {args.action_file} not exist")
-        exit(1)
+        sys.exit(1)
     if not os.path.exists(args.hosts_config_file):
         print(f"hosts file {args.hosts_config_file} not exist")
-        exit(1)
+        sys.exit(1)
     # groups文件如果配置为非默认值，则必须存在，否则报错
     if args.groups_config_file != C.DEFAULT_GROUPS_FILE and not os.path.exists(args.groups_config_file):
         print(f"groups file {args.groups_config_file} not exist")
-        exit(1)
+        sys.exit(1)
     # -s 选项只能在单线程模式下使用
     if args.run_step_by_step and args.workers > 1 :
         print("-s option only can be used in single thread mode")
-        exit(1)
+        sys.exit(1)
 
 def work():
     args = args_fun()
