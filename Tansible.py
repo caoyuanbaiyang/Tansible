@@ -39,6 +39,7 @@ class Tansible(object):
             host = self.hosts["HOST"][hostname]
             C.PackHost(self.hosts["PUBLIC"], host)
             conn_timeout = host.get("conn_timeout")
+            t0 = time.time()
             # 利用paramiko_ssh 连接主机
             conn = None
             if host["connect_type"] == 1:
@@ -50,12 +51,18 @@ class Tansible(object):
                 conn = paramiko_ssh.Connection(host=host["ip"], user=host["username"], conn_type=host["connect_type"],
                                                key_filename=host["key_filename"],
                                                passphrase=host["passphrase"],timeout=conn_timeout).connect()
+            t1 = time.time()
+            C.log.debug(f"[{hostname}] connect cost: {t1 - t0:.3f}s")
             # 模块翻译,如果在翻译列表中则用翻译后的重新赋值
             if modelname in C.MODULE_TRANS_DICT:
                 modelname = C.MODULE_TRANS_DICT[modelname]
 
             m = importlib.import_module("model." + modelname + "." + modelname)
+            t2 = time.time()
+            C.log.debug(f"[{hostname}] import module cost: {t2 - t1:.3f}s")
             result = m.ModelClass(C.log, conn, hostname, param, host).action()
+            t3 = time.time()
+            C.log.debug(f"[{hostname}] action cost: {t3 - t2:.3f}s, total: {t3 - start_time:.3f}s")
 
             end_time = time.time()
 
