@@ -97,27 +97,39 @@
         /* 筛选控件样式 */
         .filter-container {
             margin-bottom: 1.5rem;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 1rem;
             padding: 1rem;
             background-color: #f7fafc;
             border-radius: 0.375rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1rem;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
         }
 
         .filter-label {
             font-weight: 600;
             color: #2d3748;
+            font-size: 0.875rem;
             white-space: nowrap;
         }
 
+        .filter-control {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
         .filter-select {
-            padding: 0.5rem 1rem;
+            padding: 0.5rem 0.75rem;
             border: 1px solid #e2e8f0;
             border-radius: 0.375rem;
             background-color: #fff;
-            min-width: 100px;
+            min-width: 110px;
             font-size: 0.9rem;
         }
 
@@ -128,14 +140,20 @@
             box-shadow: 0 0 0 2px rgba(66, 153, 225, 0.25);
         }
 
-        /* 文本筛选框样式 */
         .filter-input {
-            padding: 0.5rem 1rem;
+            flex: 1;
+            padding: 0.5rem 0.75rem;
             border: 1px solid #e2e8f0;
             border-radius: 0.375rem;
             background-color: #fff;
-            min-width: 150px;
+            min-width: 120px;
             font-size: 0.9rem;
+        }
+
+        .filter-input:disabled {
+            background-color: #edf2f7;
+            color: #a0aec0;
+            cursor: not-allowed;
         }
 
         /* 执行秒数数值输入框样式 */
@@ -148,7 +166,82 @@
             color: #4a5568;
             font-size: 0.9rem;
             font-weight: 500;
+            white-space: nowrap;
             margin-left: auto;
+            align-self: center;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+        }
+
+        .status-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+        }
+
+        /* 复制到剪贴板控件样式 */
+        .copy-container {
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background-color: #f7fafc;
+            border-radius: 0.375rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+        }
+        .copy-label {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+        .copy-columns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            align-items: center;
+        }
+        .copy-column-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        .copy-column-item input[type="checkbox"] {
+            cursor: pointer;
+            accent-color: #4299e1;
+        }
+        .copy-btn {
+            padding: 0.5rem 1.25rem;
+            background-color: #4299e1;
+            color: #fff;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .copy-btn:hover {
+            background-color: #3182ce;
+        }
+        .copy-btn:active {
+            background-color: #2b6cb0;
+        }
+        .copy-status {
+            font-size: 0.875rem;
+            color: #38a169;
+            font-weight: 500;
             white-space: nowrap;
         }
     </style>
@@ -171,37 +264,108 @@
 
         <!-- 筛选控件 + 结果行数统计 -->
         <div class="filter-container">
-            <label class="filter-label" for="resultFilter">筛选执行结果：</label>
-            <select id="resultFilter" class="filter-select">
-                <option value="all">全部结果</option>
-                <option value="success">成功</option>
-                <option value="failed">失败</option>
-            </select>
+            <div class="status-group">
+                <label class="filter-label" for="resultFilter">执行结果</label>
+                <select id="resultFilter" class="filter-select">
+                    <option value="all">全部结果</option>
+                    <option value="success">成功</option>
+                    <option value="failed">失败</option>
+                </select>
+            </div>
 
-            <label class="filter-label" for="taskFilter">任务：</label>
-            <input type="text" id="taskFilter" class="filter-input" placeholder="模糊筛选任务名称">
+            <div class="filter-group">
+                <label class="filter-label">任务</label>
+                <div class="filter-control">
+                    <select id="taskOp" class="filter-select" data-target="taskValue">
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="eq">等于</option>
+                        <option value="ne">不等于</option>
+                        <option value="empty">为空</option>
+                        <option value="not_empty">不为空</option>
+                    </select>
+                    <input type="text" id="taskValue" class="filter-input" placeholder="输入任务名称">
+                </div>
+            </div>
 
-            <label class="filter-label" for="moduleFilter">模块名：</label>
-            <input type="text" id="moduleFilter" class="filter-input" placeholder="模糊筛选模块名">
+            <div class="filter-group">
+                <label class="filter-label">模块名</label>
+                <div class="filter-control">
+                    <select id="moduleOp" class="filter-select" data-target="moduleValue">
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="eq">等于</option>
+                        <option value="ne">不等于</option>
+                        <option value="empty">为空</option>
+                        <option value="not_empty">不为空</option>
+                    </select>
+                    <input type="text" id="moduleValue" class="filter-input" placeholder="输入模块名">
+                </div>
+            </div>
 
-            <label class="filter-label" for="hostFilter">主机名：</label>
-            <input type="text" id="hostFilter" class="filter-input" placeholder="模糊筛选主机名">
+            <div class="filter-group">
+                <label class="filter-label">主机名</label>
+                <div class="filter-control">
+                    <select id="hostOp" class="filter-select" data-target="hostValue">
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="eq">等于</option>
+                        <option value="ne">不等于</option>
+                        <option value="empty">为空</option>
+                        <option value="not_empty">不为空</option>
+                    </select>
+                    <input type="text" id="hostValue" class="filter-input" placeholder="输入主机名">
+                </div>
+            </div>
 
-            <!-- 新增执行秒数筛选 -->
-            <label class="filter-label" for="secondCondition">执行秒数：</label>
-            <select id="secondCondition" class="filter-select">
-                <option value="none">不筛选</option>
-                <option value="gt">大于</option>
-                <option value="eq">等于</option>
-                <option value="lt">小于</option>
-            </select>
-            <input type="number" id="secondValue" class="filter-input second-input" placeholder="输入数值" min="0">
+            <div class="filter-group">
+                <label class="filter-label">执行秒数</label>
+                <div class="filter-control">
+                    <select id="secondOp" class="filter-select" data-target="secondValue">
+                        <option value="none">不筛选</option>
+                        <option value="gt">大于</option>
+                        <option value="gte">大于等于</option>
+                        <option value="eq">等于</option>
+                        <option value="lt">小于</option>
+                        <option value="lte">小于等于</option>
+                        <option value="empty">为空</option>
+                        <option value="not_empty">不为空</option>
+                    </select>
+                    <input type="number" id="secondValue" class="filter-input second-input" placeholder="输入数值" min="0">
+                </div>
+            </div>
 
-            <label class="filter-label" for="resultContentFilter">返回结果：</label>
-            <input type="text" id="resultContentFilter" class="filter-input" placeholder="模糊筛选返回结果">
+            <div class="filter-group">
+                <label class="filter-label">返回结果</label>
+                <div class="filter-control">
+                    <select id="contentOp" class="filter-select" data-target="contentValue">
+                        <option value="contains">包含</option>
+                        <option value="not_contains">不包含</option>
+                        <option value="eq">等于</option>
+                        <option value="ne">不等于</option>
+                        <option value="empty">为空</option>
+                        <option value="not_empty">不为空</option>
+                    </select>
+                    <input type="text" id="contentValue" class="filter-input" placeholder="输入返回结果内容">
+                </div>
+            </div>
 
-            <!-- 筛选结果行数显示 -->
             <span class="result-count" id="resultCount">共 0 条结果</span>
+        </div>
+
+        <!-- 复制到剪贴板控件 -->
+        <div class="copy-container">
+            <span class="copy-label">复制列选择</span>
+            <div class="copy-columns">
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="0">执行结果</label>
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="1">任务</label>
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="2">模块名</label>
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="3" checked>主机名</label>
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="4">执行秒数</label>
+                <label class="copy-column-item"><input type="checkbox" class="copy-col" data-col-index="5">返回结果</label>
+            </div>
+            <button type="button" id="copyBtn" class="copy-btn">复制到剪贴板</button>
+            <span class="copy-status" id="copyStatus"></span>
         </div>
 
         <table>
@@ -234,69 +398,107 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // 获取所有筛选控件
             const resultFilter = document.getElementById('resultFilter');
-            const taskFilter = document.getElementById('taskFilter');
-            const moduleFilter = document.getElementById('moduleFilter');
-            const hostFilter = document.getElementById('hostFilter');
-            const secondCondition = document.getElementById('secondCondition');
-            const secondValue = document.getElementById('secondValue');
-            const resultContentFilter = document.getElementById('resultContentFilter');
+            const resultCountSpan = document.getElementById('resultCount');
             const tableBody = document.getElementById('resultTableBody');
             const tableRows = tableBody.querySelectorAll('tr');
-            const resultCountSpan = document.getElementById('resultCount');
 
-            // 封装筛选和行数统计逻辑
+            // 文本筛选配置
+            const textFilters = [
+                { opId: 'taskOp', valueId: 'taskValue', colIndex: 1 },
+                { opId: 'moduleOp', valueId: 'moduleValue', colIndex: 2 },
+                { opId: 'hostOp', valueId: 'hostValue', colIndex: 3 },
+                { opId: 'contentOp', valueId: 'contentValue', colIndex: 5 }
+            ];
+
+            // 数值筛选配置
+            const numberFilter = { opId: 'secondOp', valueId: 'secondValue', colIndex: 4 };
+
+            // 处理"为空/不为空"时禁用/启用输入框
+            function setupInputToggle(opId, valueId) {
+                const opEl = document.getElementById(opId);
+                const valueEl = document.getElementById(valueId);
+                opEl.addEventListener('change', () => {
+                    const disabled = opEl.value === 'empty' || opEl.value === 'not_empty';
+                    valueEl.disabled = disabled;
+                    if (disabled) valueEl.value = '';
+                    filterResults();
+                });
+            }
+
+            textFilters.forEach(f => setupInputToggle(f.opId, f.valueId));
+            setupInputToggle(numberFilter.opId, numberFilter.valueId);
+
+            function matchText(value, op, input) {
+                switch (op) {
+                    case 'contains':
+                        return value.includes(input);
+                    case 'not_contains':
+                        return !value.includes(input);
+                    case 'eq':
+                        return value === input;
+                    case 'ne':
+                        return value !== input;
+                    case 'empty':
+                        return value === '';
+                    case 'not_empty':
+                        return value !== '';
+                    default:
+                        return true;
+                }
+            }
+
+            function matchNumber(cellValue, op, inputValue) {
+                if (op === 'empty') return cellValue === '';
+                if (op === 'not_empty') return cellValue !== '';
+                if (op === 'none') return true;
+
+                const num = parseFloat(cellValue);
+                const inputNum = parseFloat(inputValue);
+                if (isNaN(num) || isNaN(inputNum)) return false;
+
+                switch (op) {
+                    case 'gt': return num > inputNum;
+                    case 'gte': return num >= inputNum;
+                    case 'eq': return num === inputNum;
+                    case 'lt': return num < inputNum;
+                    case 'lte': return num <= inputNum;
+                    default: return true;
+                }
+            }
+
             function filterResults() {
-                // 获取所有筛选条件值（统一转小写，方便不区分大小写匹配）
                 const resultValue = resultFilter.value.toLowerCase().trim();
-                const taskValue = taskFilter.value.toLowerCase().trim();
-                const moduleValue = moduleFilter.value.toLowerCase().trim();
-                const hostValue = hostFilter.value.toLowerCase().trim();
-                const contentValue = resultContentFilter.value.toLowerCase().trim();
-                // 执行秒数筛选条件
-                const secCondition = secondCondition.value;
-                const secValue = parseFloat(secondValue.value) || 0;
-
                 let visibleCount = 0;
 
                 tableRows.forEach(row => {
-                    // 获取每行的对应列文本（转小写）
                     const cells = row.querySelectorAll('td');
-                    if (cells.length < 6) return; // 防止列数异常
+                    if (cells.length < 6) return;
 
                     const rowResult = cells[0].textContent.trim().toLowerCase();
-                    const rowTask = cells[1].textContent.trim().toLowerCase();
-                    const rowModule = cells[2].textContent.trim().toLowerCase();
-                    const rowHost = cells[3].textContent.trim().toLowerCase();
-                    // 执行秒数转数值（处理非数字情况）
-                    const rowSecond = parseFloat(cells[4].textContent.trim()) || 0;
-                    const rowContent = cells[5].textContent.trim().toLowerCase();
 
-                    // 筛选条件判断（且关系：所有条件都满足才显示）
+                    // 执行结果筛选
                     const isResultMatch = resultValue === 'all' || rowResult === resultValue;
-                    const isTaskMatch = taskValue === '' || rowTask.includes(taskValue);
-                    const isModuleMatch = moduleValue === '' || rowModule.includes(moduleValue);
-                    const isHostMatch = hostValue === '' || rowHost.includes(hostValue);
-                    const isContentMatch = contentValue === '' || rowContent.includes(contentValue);
-                    // 执行秒数筛选判断
-                    let isSecondMatch = true;
-                    if (secCondition !== 'none') {
-                        switch (secCondition) {
-                            case 'gt':
-                                isSecondMatch = rowSecond > secValue;
-                                break;
-                            case 'eq':
-                                isSecondMatch = rowSecond === secValue;
-                                break;
-                            case 'lt':
-                                isSecondMatch = rowSecond < secValue;
-                                break;
+
+                    // 文本筛选
+                    let isTextMatch = true;
+                    for (const f of textFilters) {
+                        const op = document.getElementById(f.opId).value;
+                        const input = document.getElementById(f.valueId).value.toLowerCase().trim();
+                        const cellValue = cells[f.colIndex].textContent.trim().toLowerCase();
+                        if (!matchText(cellValue, op, input)) {
+                            isTextMatch = false;
+                            break;
                         }
                     }
 
-                    // 所有条件都满足则显示，否则隐藏
-                    if (isResultMatch && isTaskMatch && isModuleMatch && isHostMatch && isSecondMatch && isContentMatch) {
+                    // 数值筛选
+                    const secondOp = document.getElementById(numberFilter.opId).value;
+                    const secondInput = document.getElementById(numberFilter.valueId).value;
+                    const secondCellValue = cells[numberFilter.colIndex].textContent.trim();
+                    const isSecondMatch = matchNumber(secondCellValue, secondOp, secondInput);
+
+                    if (isResultMatch && isTextMatch && isSecondMatch) {
                         row.style.display = '';
                         visibleCount++;
                     } else {
@@ -304,21 +506,82 @@
                     }
                 });
 
-                // 更新行数显示
                 resultCountSpan.textContent = `共 ${visibleCount} 条结果`;
             }
 
-            // 监听所有筛选控件的变化事件
+            // 监听所有筛选控件变化
             resultFilter.addEventListener('change', filterResults);
-            taskFilter.addEventListener('input', filterResults);
-            moduleFilter.addEventListener('input', filterResults);
-            hostFilter.addEventListener('input', filterResults);
-            secondCondition.addEventListener('change', filterResults);
-            secondValue.addEventListener('input', filterResults); // 实时输入实时筛选
-            resultContentFilter.addEventListener('input', filterResults);
+            textFilters.forEach(f => {
+                document.getElementById(f.opId).addEventListener('change', filterResults);
+                document.getElementById(f.valueId).addEventListener('input', filterResults);
+            });
+            document.getElementById(numberFilter.opId).addEventListener('change', filterResults);
+            document.getElementById(numberFilter.valueId).addEventListener('input', filterResults);
 
-            // 页面加载时初始化行数统计
+            // 初始化行数统计
             filterResults();
+
+            // 复制到剪贴板
+            const copyBtn = document.getElementById('copyBtn');
+            const copyStatus = document.getElementById('copyStatus');
+            let copyStatusTimer = null;
+
+            function showCopyStatus(message, isError) {
+                copyStatus.textContent = message;
+                copyStatus.style.color = isError ? '#e53e3e' : '#38a169';
+                if (copyStatusTimer) clearTimeout(copyStatusTimer);
+                copyStatusTimer = setTimeout(() => { copyStatus.textContent = ''; }, 3000);
+            }
+
+            function copyToClipboard(text) {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    return navigator.clipboard.writeText(text);
+                }
+                // 降级方案：兼容旧浏览器 / 非 HTTPS 环境
+                return new Promise((resolve, reject) => {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = text;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy') ? resolve() : reject(new Error('copy failed'));
+                    } catch (e) {
+                        reject(e);
+                    } finally {
+                        document.body.removeChild(textarea);
+                    }
+                });
+            }
+
+            copyBtn.addEventListener('click', () => {
+                const colIndexes = Array.from(document.querySelectorAll('.copy-col:checked'))
+                    .map(cb => parseInt(cb.dataset.colIndex, 10))
+                    .sort((a, b) => a - b);
+
+                if (colIndexes.length === 0) {
+                    showCopyStatus('请先勾选要复制的列', true);
+                    return;
+                }
+
+                const lines = [];
+                tableRows.forEach(row => {
+                    if (row.style.display === 'none') return;
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length < 6) return;
+                    lines.push(colIndexes.map(i => cells[i].textContent.trim()).join('\t'));
+                });
+
+                if (lines.length === 0) {
+                    showCopyStatus('没有可复制的数据', true);
+                    return;
+                }
+
+                copyToClipboard(lines.join('\n'))
+                    .then(() => showCopyStatus(`已复制 ${lines.length} 行`, false))
+                    .catch(() => showCopyStatus('复制失败，请手动复制', true));
+            });
         });
     </script>
 </body>
